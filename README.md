@@ -1,4 +1,4 @@
-# spark-sqs-sink
+# Spark - AWS SQS Sink
 An example of a custom sink provider for Apache Spark that sends the contents of a dataframe to AWS SQS. It was heavily inspired by the code of this repo https://github.com/aamargajbhiye/big-data-projects.
 
 It grabs the content of the first column of the dataframe and sends it to an AWS SQS queue. It needs the following parameters:
@@ -32,4 +32,4 @@ build/libs/my-jar.jar
 
 It's easy to get lost while undertanding all the classes are needed so we can create a custom sink for Spark. Here's a class diagram to make it a little easy to find yourself. Start at SQSSinkProvider, it's the class that we configure in Spark code as a *format* method's value.
 
-![alt text](/doc/assets/Class%20Diagram-Page-1.png "Logo Title Text 2")
+![Class diagram showing all the classes needed to implement a custom sink](/doc/assets/Class%20Diagram-Page-1.png "Logo Title Text 2")
