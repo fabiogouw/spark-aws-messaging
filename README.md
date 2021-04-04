@@ -29,3 +29,7 @@ spark-submit \
 --class com.mypackage.MyExample \ 
 build/libs/my-jar.jar
 ```
+
+It's easy to get lost while undertanding all the classes are needed so we can create a custom sink for Spark. Here's a class diagram to make it a little easy to find yourself. Start at SQSSinkProvider, it's the class that we configure in Spark code as a *format* method's value.
+
+![alt text](/doc/assets/Class%20Diagram-Page-1.png "Logo Title Text 2")
