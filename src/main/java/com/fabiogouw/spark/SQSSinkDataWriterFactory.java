@@ -20,9 +20,7 @@ public class SQSSinkDataWriterFactory implements DataWriterFactory {
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId) {
 
-        BasicAWSCredentials credentials = new BasicAWSCredentials(options.getAccessKey(), options.getSecretKey());
         AmazonSQS sqs = AmazonSQSClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(credentials))
                 .withRegion(options.getRegion())
                 .build();
 

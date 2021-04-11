@@ -15,8 +15,7 @@ public class SQSSinkWriteBuilder implements WriteBuilder {
     @Override
     public BatchWrite buildForBatch() {
         int batchSize = Integer.parseInt(info.options().getOrDefault("batchSize", "1000"));
-        SQSSinkOptions options = new SQSSinkOptions(info.options().get("accessKey"),
-                info.options().get("secretKey"),
+        SQSSinkOptions options = new SQSSinkOptions(
                 info.options().get("region"),
                 info.options().get("queueName"),
                 batchSize);

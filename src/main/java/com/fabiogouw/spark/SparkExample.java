@@ -8,7 +8,7 @@ import org.apache.spark.sql.SparkSession;
 public class SparkExample {
     public static void main(String[] args) {
 
-        if(args.length != 6) {
+        if(args.length != 4) {
             throw new IllegalArgumentException("Missing parameters");
         }
 
@@ -24,11 +24,9 @@ public class SparkExample {
         df.write()
                 .format(SQSSinkProvider.class.getCanonicalName())   // "com.fabiogouw.spark.SQSSinkProvider"
                 .mode(SaveMode.Append)
-                .option("accessKey", args[1])
-                .option("secretKey", args[2])
-                .option("region", args[3])
-                .option("queueName", args[4])
-                .option("batchSize", args[5])
+                .option("region", args[1])
+                .option("queueName", args[2])
+                .option("batchSize", args[3])
                 .save();
         spark.stop();
     }
