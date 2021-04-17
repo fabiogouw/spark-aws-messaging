@@ -1,9 +1,10 @@
 plugins {
     id 'java'
+    id("maven-publish")
 }
 
 group 'com.fabiogouw'
-version '1.0-SNAPSHOT'
+version '0.1.0'
 
 repositories {
     mavenCentral()
@@ -15,4 +16,52 @@ dependencies {
     compile 'org.apache.spark:spark-sql_2.12:3.1.1'
     implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.991')
     implementation 'com.amazonaws:aws-java-sdk-sqs'
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/fabiogouw/spark-sqs-sink")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+            }
+        }
+    }
+    publications {
+        gpr(MavenPublication) {
+            from(components.java)
+        }
+
+        mavenJava(MavenPublication) {
+            artifactId = 'spark-sqs-sink'
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name = 'Spark AWS SQS'
+                description = 'An example of a custom sink provider for Apache Spark that sends the contents of a dataframe to AWS SQS'
+                url = 'https://github.com/fabiogouw/spark-sqs-sink'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'fabiogouw'
+                        name = 'Fabio Gouw'
+                    }
+                }
+            }
+        }
+    }
 }
