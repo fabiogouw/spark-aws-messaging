@@ -2,6 +2,7 @@ package com.fabiogouw.spark;
 
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import org.apache.spark.sql.catalyst.InternalRow;
+import org.apache.spark.sql.catalyst.util.ArrayData;
 import org.apache.spark.sql.catalyst.util.MapData;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
@@ -12,6 +13,8 @@ import java.util.*;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
+import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.DataTypes;
 
 public class SQSSinkDataWriter implements DataWriter<InternalRow> {
 
@@ -42,13 +45,11 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public void write(InternalRow record) throws IOException {
+        final MapData map = record.getMap(msgAttribusColumnIndex);
         SendMessageBatchRequestEntry msg = new SendMessageBatchRequestEntry()
                 .withMessageBody(record.getString(valueColumnIndex))
+                .withMessageAttributes(convertMapData(map))
                 .withId(UUID.randomUUID().toString());
-        if(msgAttribusColumnIndex >= 0) {
-            final MapData map = record.getMap(msgAttribusColumnIndex);
-            msg.setMessageAttributes(convertMapData(map));
-        }
         messages.add(msg);
         if(messages.size() >= batchMaxSize) {
             sendMessages();
@@ -57,12 +58,16 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
 
     private Map<String, MessageAttributeValue> convertMapData(MapData map) {
         final Map<String, MessageAttributeValue> attributes = new HashMap<>();
-        for (int i = 0; i < map.numElements(); i++) {
-            String key = map.keyArray().array()[i].toString();
-            String value = map.valueArray().array()[i].toString();
-            MessageAttributeValue msgAttribute = new MessageAttributeValue();
-            msgAttribute.setStringValue(value);
-            attributes.put(key, msgAttribute);
+        if(map.numElements() > 0) {
+            ArrayData actualKeys = map.keyArray();
+            ArrayData actualValues = map.valueArray();
+            for (int i = 0; i < map.numElements(); i++) {
+                Object actualKey = actualKeys.get(i, DataTypes.StringType);
+                Object actualValue = actualValues.get(i, DataTypes.StringType);
+                attributes.put(actualKey.toString(), new MessageAttributeValue()
+                        .withDataType("String")
+                        .withStringValue(actualValue.toString()));
+            }
         }
         return attributes;
     }

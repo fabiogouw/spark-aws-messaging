@@ -24,8 +24,10 @@ public class SparkExample {
                 .text(args[0]);
         df = df.withColumn("msgAttributes", map(lit("EventType"), lit("dummy")));
         df.show();
+        df.printSchema();
 
-        df.write()
+        df
+                .write()
                 .format(AWSMessagingSinkProvider.class.getCanonicalName())   // "com.fabiogouw.spark.SQSSinkProvider"
                 .mode(SaveMode.Append)
                 .option("region", args[1])

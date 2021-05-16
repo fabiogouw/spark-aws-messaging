@@ -14,8 +14,10 @@ import java.util.Map;
 public class AWSMessagingSinkProvider implements TableProvider {
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
-        StructField structField = new StructField("value", DataTypes.StringType, true, Metadata.empty());
-        return new StructType(new StructField[]{ structField });
+        StructField valueField = new StructField("value", DataTypes.StringType, true, Metadata.empty());
+        StructField msgAttributeField = new StructField("msgAttributes",
+                DataTypes.createMapType(DataTypes.StringType, DataTypes.StringType), true, Metadata.empty());
+        return new StructType(new StructField[]{ valueField, msgAttributeField });
     }
 
     @Override

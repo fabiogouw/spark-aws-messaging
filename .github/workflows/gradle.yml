@@ -21,9 +21,6 @@ jobs:
       run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew build
-    - uses: actions/delete-package-versions@v1
-      with:
-        package-name: 'com.fabiogouw.spark-aws'
     - name: Publish package
       run: ./gradlew publish
       env:

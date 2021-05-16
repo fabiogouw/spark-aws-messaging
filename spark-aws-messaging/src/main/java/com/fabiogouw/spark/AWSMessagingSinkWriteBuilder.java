@@ -27,7 +27,7 @@ public class AWSMessagingSinkWriteBuilder implements WriteBuilder {
                 batchSize,
                 service,
                 schema.fieldIndex("value"),
-                schema.getFieldIndex("msgAttributes").isEmpty() ? -1 : schema.fieldIndex("value")
+                schema.getFieldIndex("msgAttributes").isEmpty() ? -1 : schema.fieldIndex("msgAttributes")
                 );
         return new AWSMessagingSinkBatchWrite(options);
     }
