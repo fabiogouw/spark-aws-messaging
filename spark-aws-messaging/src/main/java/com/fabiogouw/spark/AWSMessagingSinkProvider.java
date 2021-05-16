@@ -11,7 +11,7 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 import java.util.Map;
 
-public class SQSSinkProvider implements TableProvider {
+public class AWSMessagingSinkProvider implements TableProvider {
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
         StructField structField = new StructField("value", DataTypes.StringType, true, Metadata.empty());
@@ -20,6 +20,6 @@ public class SQSSinkProvider implements TableProvider {
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
-        return new SQSSinkTable(schema);
+        return new AWSMessagingSinkTable(schema);
     }
 }

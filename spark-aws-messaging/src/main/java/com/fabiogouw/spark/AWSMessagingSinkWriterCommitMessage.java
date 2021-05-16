@@ -4,12 +4,12 @@ import org.apache.spark.sql.connector.write.WriterCommitMessage;
 
 import java.util.Objects;
 
-public class SQSSinkWriterCommitMessage implements WriterCommitMessage {
+public class AWSMessagingSinkWriterCommitMessage implements WriterCommitMessage {
 
     private final int partitionId;
     private final long taskId;
 
-    public SQSSinkWriterCommitMessage(int partitionId, long taskId) {
+    public AWSMessagingSinkWriterCommitMessage(int partitionId, long taskId) {
         this.partitionId = partitionId;
         this.taskId = taskId;
     }
@@ -17,8 +17,8 @@ public class SQSSinkWriterCommitMessage implements WriterCommitMessage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof SQSSinkWriterCommitMessage)) return false;
-        SQSSinkWriterCommitMessage that = (SQSSinkWriterCommitMessage) o;
+        if (!(o instanceof AWSMessagingSinkWriterCommitMessage)) return false;
+        AWSMessagingSinkWriterCommitMessage that = (AWSMessagingSinkWriterCommitMessage) o;
         return partitionId == that.partitionId;
     }
 

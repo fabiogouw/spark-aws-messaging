@@ -2,17 +2,17 @@ package com.fabiogouw.spark;
 
 import org.apache.spark.sql.connector.write.*;
 
-public class SQSSinkBatchWrite implements BatchWrite {
+public class AWSMessagingSinkBatchWrite implements BatchWrite {
 
-    private SQSSinkOptions options;
+    private AWSMessagingSinkOptions options;
 
-    public SQSSinkBatchWrite(SQSSinkOptions options) {
+    public AWSMessagingSinkBatchWrite(AWSMessagingSinkOptions options) {
         this.options = options;
     }
 
     @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
-        return new SQSSinkDataWriterFactory(options);
+        return new AWSMessagingSinkDataWriterFactory(options);
     }
 
     @Override

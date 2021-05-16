@@ -1,2 +1,4 @@
-rootProject.name = 'spark-sqs-sink'
+rootProject.name = 'spark-aws'
+include 'spark-aws-messaging-example'
+include 'spark-aws-messaging'
 
