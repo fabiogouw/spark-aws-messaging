@@ -1,4 +1,4 @@
-package com.fabiogouw.spark;
+package com.fabiogouw.spark.awsmessaging;
 
 import org.apache.spark.sql.connector.catalog.SupportsWrite;
 import org.apache.spark.sql.connector.catalog.TableCapability;

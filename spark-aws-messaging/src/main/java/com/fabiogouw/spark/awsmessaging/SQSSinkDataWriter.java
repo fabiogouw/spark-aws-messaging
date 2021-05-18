@@ -1,4 +1,4 @@
-package com.fabiogouw.spark;
+package com.fabiogouw.spark.awsmessaging;
 
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -13,7 +13,6 @@ import java.util.*;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
-import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 
 public class SQSSinkDataWriter implements DataWriter<InternalRow> {

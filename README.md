@@ -8,7 +8,7 @@ It grabs the content of the first column of the dataframe and sends it to an AWS
 
 ```java
     df.write()
-            .format("com.fabiogouw.spark.SQSSinkProvider")
+            .format("awsmessaging")
             .mode(SaveMode.Append)
             .option("region", "us-east-2")
             .option("queueName", "my-test-queue")

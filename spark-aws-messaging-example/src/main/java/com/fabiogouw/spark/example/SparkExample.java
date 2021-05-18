@@ -1,6 +1,6 @@
 package com.fabiogouw.spark.example;
 
-import com.fabiogouw.spark.AWSMessagingSinkProvider;
+import com.fabiogouw.spark.awsmessaging.AWSMessagingSinkProvider;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -28,7 +28,7 @@ public class SparkExample {
 
         df
                 .write()
-                .format(AWSMessagingSinkProvider.class.getCanonicalName())   // "com.fabiogouw.spark.SQSSinkProvider"
+                .format("awsmessaging")
                 .mode(SaveMode.Append)
                 .option("region", args[1])
                 .option("queueName", args[2])

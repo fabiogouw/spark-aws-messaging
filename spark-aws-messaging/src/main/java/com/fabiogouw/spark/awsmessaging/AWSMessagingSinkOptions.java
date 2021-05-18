@@ -1,4 +1,4 @@
-package com.fabiogouw.spark;
+package com.fabiogouw.spark.awsmessaging;
 
 import java.io.Serializable;
 

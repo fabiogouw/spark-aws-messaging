@@ -1,4 +1,4 @@
-package com.fabiogouw.spark;
+package com.fabiogouw.spark.awsmessaging;
 
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;

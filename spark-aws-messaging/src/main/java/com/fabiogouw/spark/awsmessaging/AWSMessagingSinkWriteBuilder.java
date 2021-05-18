@@ -1,10 +1,9 @@
-package com.fabiogouw.spark;
+package com.fabiogouw.spark.awsmessaging;
 
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.LogicalWriteInfo;
 import org.apache.spark.sql.connector.write.WriteBuilder;
 import org.apache.spark.sql.types.StructType;
-import scala.Option;
 
 public class AWSMessagingSinkWriteBuilder implements WriteBuilder {
 
