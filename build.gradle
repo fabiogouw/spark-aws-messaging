@@ -3,13 +3,6 @@ plugins {
     id("maven-publish")
 }
 
-group 'com.fabiogouw'
-version '0.2.0'
-
 repositories {
     mavenCentral()
-}
-
-dependencies {
-
 }

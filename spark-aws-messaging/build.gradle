@@ -1,9 +1,12 @@
 plugins {
     id 'java'
+    id 'maven'
+    id 'signing'
 }
 
-group 'com.fabiogouw'
-version '0.2.1'
+group = 'com.fabiogouw'
+archivesBaseName = 'spark-aws'
+version = '0.2.1'
 
 repositories {
     mavenCentral()
@@ -19,24 +22,68 @@ dependencies {
     implementation 'com.amazonaws:aws-java-sdk-sns'
 }
 
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
 test {
     useJUnitPlatform()
 }
 
-publishing {
+uploadArchives {
     repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/fabiogouw/spark-aws")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
             }
-        }
-    }
-    publications {
-        gpr(MavenPublication) {
-            from(components.java)
+
+            snapshotRepository(url: "https://s01.oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'Spark AWS'
+                packaging 'jar'
+                // optionally artifactId can be defined here
+                description 'AWS SQS sink provider'
+                url 'https://github.com/fabiogouw/spark-aws'
+
+                scm {
+                    connection 'scm:git:git://github.com/fabiogouw/spark-aws.git'
+                    developerConnection 'scm:git:git@github.com:fabiogouw/spark-aws.git'
+                    url 'https://github.com/fabiogouw/spark-aws'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'fabiogouw'
+                        name 'Fabio Gouw'
+                    }
+                }
+            }
         }
     }
 }
