@@ -20,5 +20,5 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle
-      run: ./gradlew build -x spark-aws-messaging:uploadArchives -x spark-aws-messaging:signArchives --info
+      run: ./gradlew build -PossrhUsername=null -PossrhPassword=null -x spark-aws-messaging:uploadArchives -x spark-aws-messaging:signArchives --info
       

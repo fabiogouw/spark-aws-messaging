@@ -28,7 +28,7 @@ public class SparkExample {
 
         df
                 .write()
-                .format("awsmessaging")
+                .format("sqs")
                 .mode(SaveMode.Append)
                 .option("region", args[1])
                 .option("queueName", args[2])

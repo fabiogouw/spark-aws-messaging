@@ -28,6 +28,6 @@ public class AWSMessagingSinkProvider implements TableProvider, DataSourceRegist
 
     @Override
     public String shortName() {
-        return "awsmessaging";
+        return "sqs";
     }
 }

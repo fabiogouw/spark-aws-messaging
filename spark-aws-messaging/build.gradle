@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.fabiogouw'
-archivesBaseName = 'spark-aws'
+archivesBaseName = 'spark-aws-messaging'
 version = '0.2.1'
 
 repositories {
@@ -58,7 +58,7 @@ uploadArchives {
             }
 
             pom.project {
-                name 'Spark AWS'
+                name 'Spark AWS Messaging providers'
                 packaging 'jar'
                 // optionally artifactId can be defined here
                 description 'AWS SQS sink provider'
