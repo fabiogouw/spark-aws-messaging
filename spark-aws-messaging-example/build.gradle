@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'com.fabiogouw.spark'
-version '0.2.0'
+version '0.3.0'
 
 repositories {
     mavenCentral()
@@ -17,6 +17,13 @@ dependencies {
     compile project(':spark-aws-messaging')
 }
 
+task copyToLib(type: Copy) {
+    into "${buildDir}/libs"
+    from configurations.runtime
+}
+
 test {
     useJUnitPlatform()
 }
+
+build.dependsOn(copyToLib)

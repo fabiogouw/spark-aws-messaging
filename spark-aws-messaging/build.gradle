@@ -6,18 +6,18 @@ plugins {
 
 group = 'com.fabiogouw'
 archivesBaseName = 'spark-aws-messaging'
-version = '0.2.1'
+version = '0.3.0'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
-    compile 'org.apache.spark:spark-core_2.12:3.1.1'
-    compile 'org.apache.spark:spark-sql_2.12:3.1.1'
-    implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.991')
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+    compile 'org.apache.spark:spark-core_2.12:3.1.2'
+    compile 'org.apache.spark:spark-sql_2.12:3.1.2'
+    implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.12')
     implementation 'com.amazonaws:aws-java-sdk-sqs'
     implementation 'com.amazonaws:aws-java-sdk-sns'
 }
@@ -72,8 +72,8 @@ uploadArchives {
 
                 licenses {
                     license {
-                        name 'The Apache License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        name 'MIT License'
+                        url 'https://opensource.org/licenses/MIT'
                     }
                 }
 

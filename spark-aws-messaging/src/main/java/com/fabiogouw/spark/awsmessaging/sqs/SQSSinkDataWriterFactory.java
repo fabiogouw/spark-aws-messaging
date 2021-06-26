@@ -1,4 +1,4 @@
-package com.fabiogouw.spark.awsmessaging;
+package com.fabiogouw.spark.awsmessaging.sqs;
 
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
@@ -6,11 +6,11 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 
-public class AWSMessagingSinkDataWriterFactory implements DataWriterFactory {
+public class SQSSinkDataWriterFactory implements DataWriterFactory {
 
-    private AWSMessagingSinkOptions options;
+    private SQSSinkOptions options;
 
-    public AWSMessagingSinkDataWriterFactory(AWSMessagingSinkOptions options) {
+    public SQSSinkDataWriterFactory(SQSSinkOptions options) {
         this.options = options;
     }
 
@@ -20,7 +20,7 @@ public class AWSMessagingSinkDataWriterFactory implements DataWriterFactory {
         AmazonSQS sqs = AmazonSQSClientBuilder.standard()
                 .withRegion(options.getRegion())
                 .build();
-        if(options.getService() == AWSMessagingSinkOptions.Service.SNS){
+        if(options.getService() == SQSSinkOptions.Service.SNS){
             //return new SNSSinkDataWriter(partitionId, taskId, sqs, options.getBatchSize(), options.getQueueName());
         }
         return new SQSSinkDataWriter(partitionId,
@@ -29,6 +29,6 @@ public class AWSMessagingSinkDataWriterFactory implements DataWriterFactory {
                 options.getBatchSize(),
                 options.getQueueName(),
                 options.getValueColumnIndex(),
-                options.getMsgAttribusColumnIndex());
+                options.getMsgAttributesColumnIndex());
     }
 }

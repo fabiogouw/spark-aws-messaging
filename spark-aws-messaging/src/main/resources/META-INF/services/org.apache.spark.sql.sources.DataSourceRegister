@@ -1,1 +1,1 @@
-com.fabiogouw.spark.awsmessaging.AWSMessagingSinkProvider
+com.fabiogouw.spark.awsmessaging.sqs.SQSSinkProvider

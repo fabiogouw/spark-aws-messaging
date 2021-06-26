@@ -1,5 +1,5 @@
 # Spark - AWS SQS Sink
-An example of a custom sink provider for Apache Spark that sends the contents of a dataframe to AWS SQS. It was heavily inspired by the code of this repo https://github.com/aamargajbhiye/big-data-projects.
+A custom sink provider for Apache Spark that sends the contents of a dataframe to AWS SQS.
 
 It grabs the content of the first column of the dataframe and sends it to an AWS SQS queue. It needs the following parameters:
 - **region** of the queue (us-east-2, for instance)
@@ -8,13 +8,16 @@ It grabs the content of the first column of the dataframe and sends it to an AWS
 
 ```java
     df.write()
-            .format("awsmessaging")
+            .format("sqs")
             .mode(SaveMode.Append)
             .option("region", "us-east-2")
             .option("queueName", "my-test-queue")
             .option("batchSize", "10")
             .save();
 ```
+
+The dataframe must have a column called 'value' (string), because this column will be used as the body of each message.
+Also, the dataframe may have a column called 'msg_attributes' (array of maps of [string, string]). In this case, the library will add each map as a message attribute.
 
 Don't forget you'll need to configure the default credentials in your machine before running the example. See 
 [Configuration and credential file settings](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) for more information.
@@ -23,7 +26,8 @@ It needs the *com.amazonaws:aws-java-sdk* package to run, so you can provide it 
 
 ```
 spark-submit \ 
---packages com.amazonaws:aws-java-sdk:1.11.991 \ 
+--packages com.amazonaws:aws-java-sdk:1.12.12 \ 
+--jars build/libs/spark-aws-messaging-0.3.0.jar \
 --master local \ 
 --class com.mypackage.MyExample \ 
 build/libs/my-jar.jar

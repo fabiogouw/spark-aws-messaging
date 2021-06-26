@@ -1,4 +1,4 @@
-package com.fabiogouw.spark.awsmessaging;
+package com.fabiogouw.spark.awsmessaging.sqs;
 
 import org.apache.spark.sql.connector.catalog.SupportsWrite;
 import org.apache.spark.sql.connector.catalog.TableCapability;
@@ -9,23 +9,23 @@ import org.apache.spark.sql.types.StructType;
 import java.util.HashSet;
 import java.util.Set;
 
-public class AWSMessagingSinkTable implements SupportsWrite {
+public class SQSSinkTable implements SupportsWrite {
 
     private Set<TableCapability> capabilities;
     private StructType schema;
 
-    public AWSMessagingSinkTable(StructType schema) {
+    public SQSSinkTable(StructType schema) {
         this.schema = schema;
     }
 
     @Override
     public WriteBuilder newWriteBuilder(LogicalWriteInfo info) {
-        return new AWSMessagingSinkWriteBuilder(info);
+        return new SQSSinkWriteBuilder(info);
     }
 
     @Override
     public String name() {
-        return "AWS.Messaging";
+        return "AWS-SQS";
     }
 
     @Override

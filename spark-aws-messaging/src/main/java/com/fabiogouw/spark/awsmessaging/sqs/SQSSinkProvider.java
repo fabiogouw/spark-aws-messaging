@@ -1,4 +1,4 @@
-package com.fabiogouw.spark.awsmessaging;
+package com.fabiogouw.spark.awsmessaging.sqs;
 
 import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableProvider;
@@ -12,19 +12,21 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 import java.util.Map;
 
-public class AWSMessagingSinkProvider implements TableProvider, DataSourceRegister {
+public class SQSSinkProvider implements TableProvider, DataSourceRegister {
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
         StructField valueField = new StructField("value", DataTypes.StringType, true, Metadata.empty());
-        StructField msgAttributeField = new StructField("msgAttributes",
-                DataTypes.createMapType(DataTypes.StringType, DataTypes.StringType), true, Metadata.empty());
-        return new StructType(new StructField[]{ valueField, msgAttributeField });
+        return new StructType(new StructField[]{ valueField });
     }
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
-        return new AWSMessagingSinkTable(schema);
+        return new SQSSinkTable(schema);
     }
+
+    /* This allows the dataframe to have more columns than expected (or optional columns) */
+    @Override
+    public boolean supportsExternalMetadata() { return true; };
 
     @Override
     public String shortName() {

@@ -1,8 +1,8 @@
-package com.fabiogouw.spark.awsmessaging;
+package com.fabiogouw.spark.awsmessaging.sqs;
 
 import java.io.Serializable;
 
-public class AWSMessagingSinkOptions implements Serializable {
+public class SQSSinkOptions implements Serializable {
     public enum Service {
         SQS,
         SNS
@@ -13,20 +13,20 @@ public class AWSMessagingSinkOptions implements Serializable {
     private final int batchSize;
     private final Service service;
     private final int valueColumnIndex;
-    private final int msgAttribusColumnIndex;
+    private final int msgAttributesColumnIndex;
 
-    public AWSMessagingSinkOptions(String region,
-                                   String queueName,
-                                   int batchSize,
-                                   Service service,
-                                   int valueColumnIndex,
-                                   int msgAttribusColumnIndex) {
+    public SQSSinkOptions(String region,
+                          String queueName,
+                          int batchSize,
+                          Service service,
+                          int valueColumnIndex,
+                          int msgAttributesColumnIndex) {
         this.region = region;
         this.queueName = queueName;
         this.batchSize = batchSize;
         this.service = service;
         this.valueColumnIndex = valueColumnIndex;
-        this.msgAttribusColumnIndex = msgAttribusColumnIndex;
+        this.msgAttributesColumnIndex = msgAttributesColumnIndex;
     }
 
     public String getRegion() {
@@ -49,7 +49,7 @@ public class AWSMessagingSinkOptions implements Serializable {
         return valueColumnIndex;
     }
 
-    public int getMsgAttribusColumnIndex() {
-        return msgAttribusColumnIndex;
+    public int getMsgAttributesColumnIndex() {
+        return msgAttributesColumnIndex;
     }
 }
