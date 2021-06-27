@@ -13,13 +13,17 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
-    compile 'org.apache.spark:spark-core_2.12:3.1.2'
-    compile 'org.apache.spark:spark-sql_2.12:3.1.2'
+    implementation group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.1.2'
+    compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.1.2'
     implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.12')
     implementation 'com.amazonaws:aws-java-sdk-sqs'
     implementation 'com.amazonaws:aws-java-sdk-sns'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+    testImplementation "org.testcontainers:testcontainers:1.15.3"
+    testImplementation "org.testcontainers:junit-jupiter:1.15.3"
+    testImplementation "org.testcontainers:localstack:1.15.3"
 }
 
 task javadocJar(type: Jar) {
@@ -40,8 +44,14 @@ signing {
     sign configurations.archives
 }
 
+task copyToLib(type: Copy) {
+    into "${buildDir}/libs/deps"
+    from configurations.runtimeClasspath
+}
+
 test {
     useJUnitPlatform()
+    dependsOn(copyToLib)
 }
 
 uploadArchives {

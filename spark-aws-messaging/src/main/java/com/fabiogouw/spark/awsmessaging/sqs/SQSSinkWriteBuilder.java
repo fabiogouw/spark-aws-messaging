@@ -24,6 +24,7 @@ public class SQSSinkWriteBuilder implements WriteBuilder {
                 .toUpperCase().trim());
         SQSSinkOptions options = new SQSSinkOptions(
                 info.options().get("region"),
+                info.options().get("endpoint"),
                 info.options().get("queueName"),
                 batchSize,
                 service,

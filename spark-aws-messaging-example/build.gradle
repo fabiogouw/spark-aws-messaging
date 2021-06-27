@@ -12,9 +12,9 @@ repositories {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
-    compile 'org.apache.spark:spark-core_2.12:3.1.1'
-    compile 'org.apache.spark:spark-sql_2.12:3.1.1'
-    compile project(':spark-aws-messaging')
+    implementation group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.1.2'
+    compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.1.2'
+    implementation project(':spark-aws-messaging')
 }
 
 task copyToLib(type: Copy) {

@@ -1,5 +1,6 @@
 package com.fabiogouw.spark.awsmessaging.sqs;
 
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -17,9 +18,16 @@ public class SQSSinkDataWriterFactory implements DataWriterFactory {
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId) {
 
-        AmazonSQS sqs = AmazonSQSClientBuilder.standard()
-                .withRegion(options.getRegion())
-                .build();
+        AmazonSQSClientBuilder clientBuilder = AmazonSQSClientBuilder.standard();
+        if(!options.getEndpoint().isEmpty()) {
+            AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(
+                    options.getEndpoint(), options.getRegion());
+            clientBuilder.withEndpointConfiguration(endpointConfiguration);
+        }
+        else {
+            clientBuilder.withRegion(options.getRegion());
+        }
+        AmazonSQS sqs = clientBuilder.build();
         if(options.getService() == SQSSinkOptions.Service.SNS){
             //return new SNSSinkDataWriter(partitionId, taskId, sqs, options.getBatchSize(), options.getQueueName());
         }
