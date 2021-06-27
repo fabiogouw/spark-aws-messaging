@@ -1,4 +1,4 @@
-package com.fabiogouw.spark.awsmessaging;
+package com.fabiogouw.spark.awsmessaging.sqs;
 
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -24,7 +24,7 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
     private final int batchMaxSize;
     private final String queueUrl;
     private final int valueColumnIndex;
-    private final int msgAttribusColumnIndex;
+    private final int msgAttributesColumnIndex;
 
     public SQSSinkDataWriter(int partitionId,
                              long taskId,
@@ -32,22 +32,25 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
                              int batchMaxSize,
                              String queueName,
                              int valueColumnIndex,
-                             int msgAttribusColumnIndex) {
+                             int msgAttributesColumnIndex) {
         this.partitionId = partitionId;
         this.taskId = taskId;
         this.batchMaxSize = batchMaxSize;
         this.sqs = sqs;
         queueUrl = sqs.getQueueUrl(queueName).getQueueUrl();
         this.valueColumnIndex = valueColumnIndex;
-        this.msgAttribusColumnIndex = msgAttribusColumnIndex;
+        this.msgAttributesColumnIndex = msgAttributesColumnIndex;
     }
 
     @Override
     public void write(InternalRow record) throws IOException {
-        final MapData map = record.getMap(msgAttribusColumnIndex);
+        Optional<ArrayData> arrayData = Optional.empty();
+        if(msgAttributesColumnIndex > 0) {
+            arrayData = Optional.of(record.getArray(msgAttributesColumnIndex));
+        }
         SendMessageBatchRequestEntry msg = new SendMessageBatchRequestEntry()
                 .withMessageBody(record.getString(valueColumnIndex))
-                .withMessageAttributes(convertMapData(map))
+                .withMessageAttributes(convertMapData(arrayData))
                 .withId(UUID.randomUUID().toString());
         messages.add(msg);
         if(messages.size() >= batchMaxSize) {
@@ -55,17 +58,18 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
         }
     }
 
-    private Map<String, MessageAttributeValue> convertMapData(MapData map) {
+    private Map<String, MessageAttributeValue> convertMapData(Optional<ArrayData> arrayData) {
         final Map<String, MessageAttributeValue> attributes = new HashMap<>();
-        if(map.numElements() > 0) {
-            ArrayData actualKeys = map.keyArray();
-            ArrayData actualValues = map.valueArray();
-            for (int i = 0; i < map.numElements(); i++) {
-                Object actualKey = actualKeys.get(i, DataTypes.StringType);
-                Object actualValue = actualValues.get(i, DataTypes.StringType);
-                attributes.put(actualKey.toString(), new MessageAttributeValue()
-                        .withDataType("String")
-                        .withStringValue(actualValue.toString()));
+        if(arrayData.isPresent()) {
+            ArrayData currentArray = arrayData.get();
+            for (int i = 0; i < currentArray.numElements(); i++) {
+                MapData mapData = currentArray.getMap(i);
+                mapData.foreach(DataTypes.StringType, DataTypes.StringType, (key, value) -> {
+                    attributes.put(key.toString(), new MessageAttributeValue()
+                            .withDataType("String")
+                            .withStringValue(value.toString()));
+                    return null;
+                });
             }
         }
         return attributes;
@@ -80,7 +84,7 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new AWSMessagingSinkWriterCommitMessage(partitionId, taskId);
+        return new SQSSinkWriterCommitMessage(partitionId, taskId);
     }
 
     @Override

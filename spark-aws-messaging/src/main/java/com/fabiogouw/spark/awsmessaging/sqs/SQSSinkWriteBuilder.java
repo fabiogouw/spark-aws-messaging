@@ -1,15 +1,17 @@
-package com.fabiogouw.spark.awsmessaging;
+package com.fabiogouw.spark.awsmessaging.sqs;
 
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.LogicalWriteInfo;
 import org.apache.spark.sql.connector.write.WriteBuilder;
 import org.apache.spark.sql.types.StructType;
 
-public class AWSMessagingSinkWriteBuilder implements WriteBuilder {
+public class SQSSinkWriteBuilder implements WriteBuilder {
 
     private LogicalWriteInfo info;
+    private static final String messageAttributesColumnName = "msg_attributes";
+    private static final String valueColumnName = "value";
 
-    public AWSMessagingSinkWriteBuilder(LogicalWriteInfo info) {
+    public SQSSinkWriteBuilder(LogicalWriteInfo info) {
         this.info = info;
     }
 
@@ -17,17 +19,18 @@ public class AWSMessagingSinkWriteBuilder implements WriteBuilder {
     public BatchWrite buildForBatch() {
         int batchSize = Integer.parseInt(info.options().getOrDefault("batchSize", "1000"));
         final StructType schema = info.schema();
-        AWSMessagingSinkOptions.Service service = AWSMessagingSinkOptions.Service.valueOf(
+        SQSSinkOptions.Service service = SQSSinkOptions.Service.valueOf(
                 info.options().getOrDefault("service", "SQS")
                 .toUpperCase().trim());
-        AWSMessagingSinkOptions options = new AWSMessagingSinkOptions(
+        SQSSinkOptions options = new SQSSinkOptions(
                 info.options().get("region"),
+                info.options().get("endpoint"),
                 info.options().get("queueName"),
                 batchSize,
                 service,
-                schema.fieldIndex("value"),
-                schema.getFieldIndex("msgAttributes").isEmpty() ? -1 : schema.fieldIndex("msgAttributes")
+                schema.fieldIndex(valueColumnName),
+                schema.getFieldIndex(messageAttributesColumnName).isEmpty() ? -1 : schema.fieldIndex(messageAttributesColumnName)
                 );
-        return new AWSMessagingSinkBatchWrite(options);
+        return new SQSSinkBatchWrite(options);
     }
 }
