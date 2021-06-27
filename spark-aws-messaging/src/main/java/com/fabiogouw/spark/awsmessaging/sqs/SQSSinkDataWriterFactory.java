@@ -28,9 +28,6 @@ public class SQSSinkDataWriterFactory implements DataWriterFactory {
             clientBuilder.withRegion(options.getRegion());
         }
         AmazonSQS sqs = clientBuilder.build();
-        if(options.getService() == SQSSinkOptions.Service.SNS){
-            //return new SNSSinkDataWriter(partitionId, taskId, sqs, options.getBatchSize(), options.getQueueName());
-        }
         return new SQSSinkDataWriter(partitionId,
                 taskId,
                 sqs,

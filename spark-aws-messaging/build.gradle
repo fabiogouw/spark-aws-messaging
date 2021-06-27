@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.fabiogouw'
 archivesBaseName = 'spark-aws-messaging'
-version = '0.3.0'
+version = '0.3.1'
 
 repositories {
     mavenCentral()
@@ -15,9 +15,8 @@ repositories {
 dependencies {
     implementation group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.1.2'
     compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.1.2'
-    implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.12')
+    implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.13')
     implementation 'com.amazonaws:aws-java-sdk-sqs'
-    implementation 'com.amazonaws:aws-java-sdk-sns'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'

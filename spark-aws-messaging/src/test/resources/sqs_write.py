@@ -6,7 +6,7 @@ from pyspark.sql import SparkSession
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Usage: wordcount <file>", file=sys.stderr)
+        print("Missing parameters")
         sys.exit(-1)
     print("File: " + sys.argv[1])
     print("Endpoint: " + sys.argv[2])

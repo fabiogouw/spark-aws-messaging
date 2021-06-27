@@ -11,8 +11,8 @@ import static org.apache.spark.sql.functions.*;
 
 public class SparkExample {
     /**
-     * spark-submit --packages com.amazonaws:aws-java-sdk:1.12.12 \
-     * --jars build/libs/spark-aws-messaging-0.3.0.jar \
+     * spark-submit --packages com.amazonaws:aws-java-sdk:1.12.13 \
+     * --jars build/libs/spark-aws-messaging-0.3.1.jar \
      * --master local \
      * --class com.fabiogouw.spark.example.SparkExample \
      * build/libs/spark-aws-messaging-example-0.3.0.jar \

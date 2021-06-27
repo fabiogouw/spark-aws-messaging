@@ -23,9 +23,9 @@ public class SQSSinkOptions implements Serializable {
                           Service service,
                           int valueColumnIndex,
                           int msgAttributesColumnIndex) {
-        this.region = region;
-        this.endpoint = endpoint;
-        this.queueName = queueName;
+        this.region = region != null ? region : "us-east-1";
+        this.endpoint = endpoint != null ? endpoint : "";
+        this.queueName = queueName != null ? queueName : "";
         this.batchSize = batchSize;
         this.service = service;
         this.valueColumnIndex = valueColumnIndex;
