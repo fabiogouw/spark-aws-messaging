@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2021-04-12T15:27:59.068Z" agent="5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36" etag="OF2kiv5RMd-dzjMf453a" version="14.5.7" type="github">
+<mxfile host="app.diagrams.net" modified="2021-07-17T16:11:25.730Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" etag="nrHCPOxFvDRpEvOFe__a" version="14.6.9" type="github">
   <diagram id="8d-3fIY-xKLBhlBK9Z72" name="Page-1">
-    <mxGraphModel dx="782" dy="1845" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1022" dy="1816" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="7ALV5jei1pQc-AYIu4Ic-1" value="Background" style="locked=1;" parent="0" />
@@ -58,7 +58,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="aUiP8YorQjEKPf9iPdD1-20" value="&lt;Serializable&gt;&#xa;SQSSinkDataWriterFactory" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=38;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
-          <mxGeometry x="290" y="608" width="295" height="98" as="geometry" />
+          <mxGeometry x="293.75" y="608" width="295" height="98" as="geometry" />
         </mxCell>
         <mxCell id="aUiP8YorQjEKPf9iPdD1-21" value="+ options: SQSSinkOptions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="aUiP8YorQjEKPf9iPdD1-20" vertex="1">
           <mxGeometry y="38" width="295" height="26" as="geometry" />
@@ -106,22 +106,22 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="aUiP8YorQjEKPf9iPdD1-15" value="SQSSinkBatchWrite" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
-          <mxGeometry x="276.25" y="413" width="322.5" height="110" as="geometry" />
+          <mxGeometry x="276.25" y="413" width="330" height="110" as="geometry" />
         </mxCell>
         <mxCell id="aUiP8YorQjEKPf9iPdD1-16" value="+ options: SQSSinkOptions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="aUiP8YorQjEKPf9iPdD1-15" vertex="1">
-          <mxGeometry y="26" width="322.5" height="26" as="geometry" />
+          <mxGeometry y="26" width="330" height="26" as="geometry" />
         </mxCell>
         <mxCell id="aUiP8YorQjEKPf9iPdD1-17" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="aUiP8YorQjEKPf9iPdD1-15" vertex="1">
-          <mxGeometry y="52" width="322.5" height="8" as="geometry" />
+          <mxGeometry y="52" width="330" height="8" as="geometry" />
         </mxCell>
         <mxCell id="aUiP8YorQjEKPf9iPdD1-18" value="+ createBatchWriterFactory(...): SQSSinkDataWriterFactory&#xa;+ commit (SQSSinkWriterCommitMessage[])&#xa;+ abort (SQSSinkWriterCommitMessage[])" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="aUiP8YorQjEKPf9iPdD1-15" vertex="1">
-          <mxGeometry y="60" width="322.5" height="50" as="geometry" />
+          <mxGeometry y="60" width="330" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="aUiP8YorQjEKPf9iPdD1-42" value="Defines how to write data in a batch process" style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fontSize=10;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
-          <mxGeometry x="540" y="390" width="90" height="40" as="geometry" />
+        <mxCell id="aUiP8YorQjEKPf9iPdD1-42" value="This one manages the whole writing processes. Here we can control the transaction writing if we want (commiting or aborting the whole data, after receiving what happened on each of the partition writing)." style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fontSize=10;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="515" y="390" width="225" height="59" as="geometry" />
         </mxCell>
-        <mxCell id="aUiP8YorQjEKPf9iPdD1-43" value="This class will call AWS to put messages on the queue (each partition will have its own instance)" style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fontSize=9;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
-          <mxGeometry x="930" y="706" width="140" height="43" as="geometry" />
+        <mxCell id="aUiP8YorQjEKPf9iPdD1-43" value="This class will call AWS to put messages on the queue (each partition will have its own instance). This is the one that actually writes the data." style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fontSize=9;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="900" y="706" width="150" height="54" as="geometry" />
         </mxCell>
         <mxCell id="aUiP8YorQjEKPf9iPdD1-10" value="SQSSinkWriteBuilder" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
           <mxGeometry x="331.25" y="240" width="212.5" height="86" as="geometry" />
@@ -150,7 +150,7 @@
         <mxCell id="aUiP8YorQjEKPf9iPdD1-53" value="+ method(type): type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;noLabel=1;fontColor=none;" parent="aUiP8YorQjEKPf9iPdD1-50" vertex="1">
           <mxGeometry y="98" width="160" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="aUiP8YorQjEKPf9iPdD1-5" value="SQSSinkTable" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
+        <mxCell id="aUiP8YorQjEKPf9iPdD1-5" value="SQSSinkTable : SupportsWrite" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
           <mxGeometry x="312.5" y="80" width="250" height="86" as="geometry" />
         </mxCell>
         <mxCell id="aUiP8YorQjEKPf9iPdD1-6" value="+ capabilities: Set&lt;TableCapability&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="aUiP8YorQjEKPf9iPdD1-5" vertex="1">
@@ -174,8 +174,23 @@
         <mxCell id="aUiP8YorQjEKPf9iPdD1-4" value="+ getTable(...): SQSSinkTable" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="aUiP8YorQjEKPf9iPdD1-1" vertex="1">
           <mxGeometry y="60" width="205" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="aUiP8YorQjEKPf9iPdD1-40" value="Represents a table that supports only writes!" style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fontSize=10;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
-          <mxGeometry x="505" y="50" width="80" height="50" as="geometry" />
+        <mxCell id="aUiP8YorQjEKPf9iPdD1-40" value="A table represents a logical data set of a data source, and in this caso it has&amp;nbsp;support for only writes. The table defines what we can do with this data source (capabilities like writing in batch)" style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fontSize=10;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="540" y="50" width="255" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="nwyGnvh_34b5AAqSz3P4-1" value="This class represents the provider used by Spark. In our case, a provider for writing data into AWS SQS." style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fontSize=10;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="130" y="-68" width="210" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="nwyGnvh_34b5AAqSz3P4-2" value="This class creates the configuration needed for batch writing. It also may configure the streaming writing, but for our case we&#39;ll only support batch." style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fontSize=10;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="530" y="217" width="270" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="nwyGnvh_34b5AAqSz3P4-4" value="A DTO that holds information of what happened when we tried to write the partition." style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fontSize=9;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="900" y="490" width="170" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="nwyGnvh_34b5AAqSz3P4-5" value="An instance of this class will be created at each executor node. This class holds responsibility for creating a data writer for each partition." style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fontSize=9;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="275" y="716" width="145" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="nwyGnvh_34b5AAqSz3P4-6" value="A DTO that holds the configuration we provided when calling the dataframe&#39;s write method." style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingTop=-6;fontSize=9;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="70" y="180" width="170" height="40" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
