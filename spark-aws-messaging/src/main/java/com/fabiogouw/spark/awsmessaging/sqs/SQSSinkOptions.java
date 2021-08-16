@@ -63,7 +63,7 @@ public class SQSSinkOptions implements Serializable {
         return msgAttributesColumnIndex;
     }
 
-    public int getQueueOwnerAWSAccountId() {
-        return QueueOwnerAWSAccountId;
+    public String getQueueOwnerAWSAccountId() {
+        return queueOwnerAWSAccountId;
     }
 }

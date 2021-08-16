@@ -1,5 +1,6 @@
 package com.fabiogouw.spark.awsmessaging.sqs;
 
+import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.util.ArrayData;
@@ -38,13 +39,12 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
         this.partitionId = partitionId;
         this.taskId = taskId;
         this.batchMaxSize = batchMaxSize;
+        this.queueOwnerAWSAccountId = queueOwnerAWSAccountId;
         this.sqs = sqs;
-        queueUrlRequest = sqs.GetQueueUrlRequest();
-        queueUrlRequest.setQueueName(queueName);
+        GetQueueUrlRequest queueUrlRequest = new GetQueueUrlRequest(queueName);
         if(!queueOwnerAWSAccountId.isEmpty()) {
             queueUrlRequest.setQueueOwnerAWSAccountId(queueOwnerAWSAccountId);
         }
-        queueUrlRequest.setQueueOwnerAWSAccountId(queueOwnerAWSAccountId);
         queueUrl = sqs.getQueueUrl(queueUrlRequest).getQueueUrl();
         this.valueColumnIndex = valueColumnIndex;
         this.msgAttributesColumnIndex = msgAttributesColumnIndex;
