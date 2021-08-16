@@ -26,6 +26,7 @@ public class SQSSinkWriteBuilder implements WriteBuilder {
                 info.options().get("region"),
                 info.options().get("endpoint"),
                 info.options().get("queueName"),
+                info.options().get("queueOwnerAWSAccountId"),
                 batchSize,
                 service,
                 schema.fieldIndex(valueColumnName),
