@@ -73,3 +73,10 @@ This library is available at Maven Central repository, so you can reference it i
 It's easy to get lost while understanding all the classes are needed, so we can create a custom sink for Spark. Here's a class diagram to make it a little easy to find yourself. Start at SQSSinkProvider, it's the class that we configure in Spark code as a *format* method's value.
 
 ![Class diagram showing all the classes needed to implement a custom sink](/doc/assets/Class%20Diagram-Page-1.png "Class diagram showing all the classes needed to implement a custom sink")
+
+## Sending messages to a queue in another AWS Account
+You might have an architecture where the Spark job and the SQS are in different AWS accounts. In that case, you can specify one extra option to make the writer aware of which account to use.
+
+```java
+.option("queueOwnerAWSAccountId", "123456789012")
+```

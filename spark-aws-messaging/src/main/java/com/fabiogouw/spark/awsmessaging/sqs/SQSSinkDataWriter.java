@@ -23,6 +23,7 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
     private final List<SendMessageBatchRequestEntry> messages = new ArrayList<SendMessageBatchRequestEntry>();
     private final int batchMaxSize;
     private final String queueUrl;
+    private final String queueOwnerAWSAccountId;
     private final int valueColumnIndex;
     private final int msgAttributesColumnIndex;
 
@@ -31,13 +32,20 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
                              AmazonSQS sqs,
                              int batchMaxSize,
                              String queueName,
+                             String queueOwnerAWSAccountId,
                              int valueColumnIndex,
                              int msgAttributesColumnIndex) {
         this.partitionId = partitionId;
         this.taskId = taskId;
         this.batchMaxSize = batchMaxSize;
         this.sqs = sqs;
-        queueUrl = sqs.getQueueUrl(queueName).getQueueUrl();
+        queueUrlRequest = sqs.GetQueueUrlRequest();
+        queueUrlRequest.setQueueName(queueName);
+        if(!queueOwnerAWSAccountId.isEmpty()) {
+            queueUrlRequest.setQueueOwnerAWSAccountId(queueOwnerAWSAccountId);
+        }
+        queueUrlRequest.setQueueOwnerAWSAccountId(queueOwnerAWSAccountId);
+        queueUrl = sqs.getQueueUrl(queueUrlRequest).getQueueUrl();
         this.valueColumnIndex = valueColumnIndex;
         this.msgAttributesColumnIndex = msgAttributesColumnIndex;
     }

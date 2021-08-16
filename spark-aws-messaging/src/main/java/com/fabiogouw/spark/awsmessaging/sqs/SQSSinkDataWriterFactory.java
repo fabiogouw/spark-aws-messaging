@@ -33,6 +33,7 @@ public class SQSSinkDataWriterFactory implements DataWriterFactory {
                 sqs,
                 options.getBatchSize(),
                 options.getQueueName(),
+                options.getQueueOwnerAWSAccountId(),
                 options.getValueColumnIndex(),
                 options.getMsgAttributesColumnIndex());
     }

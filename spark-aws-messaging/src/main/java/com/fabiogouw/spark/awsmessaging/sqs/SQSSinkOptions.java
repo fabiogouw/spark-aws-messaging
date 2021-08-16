@@ -11,6 +11,7 @@ public class SQSSinkOptions implements Serializable {
     private final String region;
     private final String endpoint;
     private final String queueName;
+    private final String queueOwnerAWSAccountId;
     private final int batchSize;
     private final Service service;
     private final int valueColumnIndex;
@@ -19,6 +20,7 @@ public class SQSSinkOptions implements Serializable {
     public SQSSinkOptions(String region,
                           String endpoint,
                           String queueName,
+                          String queueOwnerAWSAccountId,
                           int batchSize,
                           Service service,
                           int valueColumnIndex,
@@ -26,6 +28,7 @@ public class SQSSinkOptions implements Serializable {
         this.region = region != null ? region : "us-east-1";
         this.endpoint = endpoint != null ? endpoint : "";
         this.queueName = queueName != null ? queueName : "";
+        this.queueOwnerAWSAccountId = queueOwnerAWSAccountId != null ? queueOwnerAWSAccountId : "";
         this.batchSize = batchSize;
         this.service = service;
         this.valueColumnIndex = valueColumnIndex;
@@ -58,5 +61,9 @@ public class SQSSinkOptions implements Serializable {
 
     public int getMsgAttributesColumnIndex() {
         return msgAttributesColumnIndex;
+    }
+
+    public int getQueueOwnerAWSAccountId() {
+        return QueueOwnerAWSAccountId;
     }
 }
