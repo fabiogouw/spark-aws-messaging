@@ -1,5 +1,9 @@
 package com.fabiogouw.spark.awsmessaging.sqs;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.model.*;
 import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,9 +51,11 @@ public class SparkIntegrationTest {
     public void shouldPutASQSMessageInLocalstackUsingSpark() throws IOException, InterruptedException {
         String expectedBody = "my message body";    // the same value in resources/sample.txt
 
+        BasicAWSCredentials credentials = new BasicAWSCredentials(localstack.getAccessKey(), localstack.getSecretKey());
+        
         AmazonSQS sqs = AmazonSQSClientBuilder.standard()
-                .withEndpointConfiguration(localstack.getEndpointConfiguration(SQS))
-                .withCredentials(localstack.getDefaultCredentialsProvider())
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("http://localhost:4566", Regions.US_EAST_1.getName()))
+                .withCredentials(new AWSStaticCredentialsProvider(credentials))
                 .build();
         sqs.createQueue("my-test");
 
