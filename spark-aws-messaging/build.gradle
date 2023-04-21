@@ -6,23 +6,23 @@ plugins {
 
 group = 'com.fabiogouw'
 archivesBaseName = 'spark-aws-messaging'
-version = '0.4.0'
+version = '0.4.1'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.1.2'
-    compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.1.2'
-    implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.13')
+    implementation group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.2.2'
+    compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.2.2'
+    implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.453')
     implementation 'com.amazonaws:aws-java-sdk-sqs'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
-    testImplementation "org.testcontainers:testcontainers:1.15.3"
-    testImplementation "org.testcontainers:junit-jupiter:1.15.3"
-    testImplementation "org.testcontainers:localstack:1.15.3"
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+    testImplementation "org.testcontainers:testcontainers:1.18.0"
+    testImplementation "org.testcontainers:junit-jupiter:1.18.0"
+    testImplementation "org.testcontainers:localstack:1.18.0"
 }
 
 task javadocJar(type: Jar) {
@@ -74,9 +74,9 @@ uploadArchives {
                 url 'https://github.com/fabiogouw/spark-aws'
 
                 scm {
-                    connection 'scm:git:git://github.com/fabiogouw/spark-aws.git'
-                    developerConnection 'scm:git:git@github.com:fabiogouw/spark-aws.git'
-                    url 'https://github.com/fabiogouw/spark-aws'
+                    connection 'scm:git:git://github.com/fabiogouw/spark-aws-messaging.git'
+                    developerConnection 'scm:git:git@github.com:fabiogouw/spark-aws-messaging.git'
+                    url 'https://github.com/fabiogouw/spark-aws-messaging'
                 }
 
                 licenses {

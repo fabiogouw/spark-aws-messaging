@@ -26,7 +26,7 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 @Testcontainers
 public class SparkIntegrationTest {
 
-    private static Network network = Network.newNetwork();
+    private final Network network = Network.newNetwork();
 
     @Container
     public LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:0.12.13"))
@@ -55,7 +55,7 @@ public class SparkIntegrationTest {
 
         org.testcontainers.containers.Container.ExecResult lsResult =
                 spark.execInContainer("spark-submit",
-                        "--jars", "/home/spark-aws-messaging-0.4.0.jar,/home/deps/aws-java-sdk-core-1.12.13.jar,/home/deps/aws-java-sdk-sqs-1.12.13.jar",
+                        "--jars", "/home/spark-aws-messaging-0.4.1.jar,/home/deps/aws-java-sdk-core-1.12.453.jar,/home/deps/aws-java-sdk-sqs-1.12.453.jar",
                         "--master", "local",
                         "/home/sqs_write.py",
                         "/home/sample.txt",

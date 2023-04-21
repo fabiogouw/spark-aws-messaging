@@ -30,7 +30,7 @@ The following command can be used to run the sample of how to use this library.
 
 ``` bash
 spark-submit \
---packages com.fabiogouw:spark-aws-messaging:0.3.1,com.amazonaws:aws-java-sdk-sqs:1.12.13 \
+--packages com.fabiogouw:spark-aws-messaging:0.4.1,com.amazonaws:aws-java-sdk-sqs:1.12.453 \
 test.py sample.txt
 ```
 
@@ -68,7 +68,7 @@ This library is available at Maven Central repository, so you can reference it i
 <dependency>
     <groupId>com.fabiogouw</groupId>
     <artifactId>spark-aws-messaging</artifactId>
-    <version>0.4.0</version>
+    <version>0.4.1</version>
 </dependency>
 ```
 
