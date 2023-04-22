@@ -33,7 +33,7 @@ public class SparkIntegrationTest {
     private final Network network = Network.newNetwork();
 
     @Container
-    public LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:0.12.13"))
+    public LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:2.0.2"))
             .withNetwork(network)
             .withNetworkAliases("localstack")
             .withServices(SQS);
@@ -43,6 +43,7 @@ public class SparkIntegrationTest {
             .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0744), "/home/")
             .withCopyFileToContainer(MountableFile.forHostPath("build/libs/.", 0555), "/home/")
             .withNetwork(network)
+            .withExposedPorts(4566)
             .withEnv("AWS_ACCESS_KEY_ID", "test")
             .withEnv("AWS_SECRET_KEY", "test")
             .withEnv("SPARK_MODE", "master");
