@@ -27,6 +27,7 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
     private final String queueOwnerAWSAccountId;
     private final int valueColumnIndex;
     private final int msgAttributesColumnIndex;
+    private final int groupIdColumnIndex;
 
     public SQSSinkDataWriter(int partitionId,
                              long taskId,
@@ -35,7 +36,8 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
                              String queueName,
                              String queueOwnerAWSAccountId,
                              int valueColumnIndex,
-                             int msgAttributesColumnIndex) {
+                             int msgAttributesColumnIndex,
+                             int groupIdColumnIndex) {
         this.partitionId = partitionId;
         this.taskId = taskId;
         this.batchMaxSize = batchMaxSize;
@@ -48,6 +50,7 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
         queueUrl = sqs.getQueueUrl(queueUrlRequest).getQueueUrl();
         this.valueColumnIndex = valueColumnIndex;
         this.msgAttributesColumnIndex = msgAttributesColumnIndex;
+        this.groupIdColumnIndex = groupIdColumnIndex;
     }
 
     @Override
@@ -56,8 +59,10 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
         if(msgAttributesColumnIndex > 0) {
             arrayData = Optional.of(record.getArray(msgAttributesColumnIndex));
         }
+        String groupId = groupIdColumnIndex > 0 ? record.getString(groupIdColumnIndex) : null;
         SendMessageBatchRequestEntry msg = new SendMessageBatchRequestEntry()
                 .withMessageBody(record.getString(valueColumnIndex))
+                .withMessageGroupId(groupId)
                 .withMessageAttributes(convertMapData(arrayData))
                 .withId(UUID.randomUUID().toString());
         messages.add(msg);
