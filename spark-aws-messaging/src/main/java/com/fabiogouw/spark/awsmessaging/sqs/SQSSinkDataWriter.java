@@ -59,12 +59,13 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
         if(msgAttributesColumnIndex > 0) {
             arrayData = Optional.of(record.getArray(msgAttributesColumnIndex));
         }
-        String groupId = groupIdColumnIndex > 0 ? record.getString(groupIdColumnIndex) : null;
         SendMessageBatchRequestEntry msg = new SendMessageBatchRequestEntry()
                 .withMessageBody(record.getString(valueColumnIndex))
-                .withMessageGroupId(groupId)
                 .withMessageAttributes(convertMapData(arrayData))
                 .withId(UUID.randomUUID().toString());
+        if(groupIdColumnIndex >= 0) {
+            msg = msg.withMessageGroupId(record.getString(groupIdColumnIndex));
+        }
         messages.add(msg);
         if(messages.size() >= batchMaxSize) {
             sendMessages();

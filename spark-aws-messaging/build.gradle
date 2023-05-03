@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.fabiogouw'
 archivesBaseName = 'spark-aws-messaging'
-version = '0.4.0'
+version = '0.5.0'
 
 repositories {
     mavenCentral()
@@ -71,12 +71,12 @@ uploadArchives {
                 packaging 'jar'
                 // optionally artifactId can be defined here
                 description 'AWS SQS sink provider'
-                url 'https://github.com/fabiogouw/spark-aws'
+                url 'https://github.com/fabiogouw/spark-aws-messaging'
 
                 scm {
-                    connection 'scm:git:git://github.com/fabiogouw/spark-aws.git'
-                    developerConnection 'scm:git:git@github.com:fabiogouw/spark-aws.git'
-                    url 'https://github.com/fabiogouw/spark-aws'
+                    connection 'scm:git:git://github.com/fabiogouw/spark-aws-messaging.git'
+                    developerConnection 'scm:git:git@github.com:fabiogouw/spark-aws-messaging.git'
+                    url 'https://github.com/fabiogouw/spark-aws-messaging'
                 }
 
                 licenses {

@@ -9,6 +9,7 @@ public class SQSSinkWriteBuilder implements WriteBuilder {
 
     private LogicalWriteInfo info;
     private static final String messageAttributesColumnName = "msg_attributes";
+    private static final String groupIdColumnName = "group_id";
     private static final String valueColumnName = "value";
 
     public SQSSinkWriteBuilder(LogicalWriteInfo info) {
