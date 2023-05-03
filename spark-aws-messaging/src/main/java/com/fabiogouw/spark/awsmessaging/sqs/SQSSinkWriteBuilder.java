@@ -30,7 +30,8 @@ public class SQSSinkWriteBuilder implements WriteBuilder {
                 batchSize,
                 service,
                 schema.fieldIndex(valueColumnName),
-                schema.getFieldIndex(messageAttributesColumnName).isEmpty() ? -1 : schema.fieldIndex(messageAttributesColumnName)
+                schema.getFieldIndex(messageAttributesColumnName).isEmpty() ? -1 : schema.fieldIndex(messageAttributesColumnName),
+                schema.getFieldIndex(groupIdColumnName).isEmpty() ? -1 : schema.fieldIndex(groupIdColumnName)
                 );
         return new SQSSinkBatchWrite(options);
     }
