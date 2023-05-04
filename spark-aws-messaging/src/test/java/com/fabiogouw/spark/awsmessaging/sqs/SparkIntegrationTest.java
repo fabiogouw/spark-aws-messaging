@@ -62,7 +62,7 @@ public class SparkIntegrationTest {
 
         org.testcontainers.containers.Container.ExecResult lsResult =
                 spark.execInContainer("spark-submit",
-                        "--jars", "/home/spark-aws-messaging-0.4.1.jar,/home/deps/aws-java-sdk-core-1.12.453.jar,/home/deps/aws-java-sdk-sqs-1.12.453.jar",
+                        "--jars", "/home/spark-aws-messaging-0.5.0.jar,/home/deps/aws-java-sdk-core-1.12.13.jar,/home/deps/aws-java-sdk-sqs-1.12.13.jar",
                         "--master", "local",
                         "/home/sqs_write.py",
                         "/home/sample.txt",

@@ -9,6 +9,7 @@ public class SQSSinkWriteBuilder implements WriteBuilder {
 
     private final LogicalWriteInfo info;
     private static final String messageAttributesColumnName = "msg_attributes";
+    private static final String groupIdColumnName = "group_id";
     private static final String valueColumnName = "value";
 
     public SQSSinkWriteBuilder(LogicalWriteInfo info) {
@@ -30,7 +31,8 @@ public class SQSSinkWriteBuilder implements WriteBuilder {
                 batchSize,
                 service,
                 schema.fieldIndex(valueColumnName),
-                schema.getFieldIndex(messageAttributesColumnName).isEmpty() ? -1 : schema.fieldIndex(messageAttributesColumnName)
+                schema.getFieldIndex(messageAttributesColumnName).isEmpty() ? -1 : schema.fieldIndex(messageAttributesColumnName),
+                schema.getFieldIndex(groupIdColumnName).isEmpty() ? -1 : schema.fieldIndex(groupIdColumnName)
                 );
         return new SQSSinkBatchWrite(options);
     }

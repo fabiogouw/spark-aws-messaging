@@ -72,6 +72,14 @@ This library is available at Maven Central repository, so you can reference it i
 </dependency>
 ```
 
+The IAM permissions needed for this library to write on a SQS queue are *sqs:GetQueueUrl* and *sqs:SendMessage*.
+
+## Architecture
+
 It's easy to get lost while understanding all the classes are needed, so we can create a custom sink for Spark. Here's a class diagram to make it a little easy to find yourself. Start at SQSSinkProvider, it's the class that we configure in Spark code as a *format* method's value.
 
 ![Class diagram showing all the classes needed to implement a custom sink](/doc/assets/Class%20Diagram-Page-1.png "Class diagram showing all the classes needed to implement a custom sink")
+
+## How to
+
+- [Use this library with AWS Glue](doc/aws-glue.md)
