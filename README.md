@@ -18,8 +18,12 @@ df.write()
     .save();
 ```
 
-The dataframe must have a column called **value** (string), because this column will be used as the body of each message.
-Also, the dataframe may have a column called **msg_attributes** (array of maps of [string, string]). In this case, the library will add each map as a message attribute.
+The dataframe:
+- must have a column called **value** (string), because this column will be used as the body of each message.
+- may have a column called **msg_attributes** (map of [string, string]). In this case, the library will add each key/value as a [metadata attribute](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html) to the SQS message.
+- may have a column called **group_id** (string). In this case, the library will add the group id used by [FIFO queues](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/using-messagegroupid-property.html).
+
+The folder [/spark-aws-messaging/src/test/resources](/spark-aws-messaging/src/test/resources) contains some PySpark simple examples used in the integration tests (the *endpoint* option is not required).
 
 Don't forget you'll need to configure the default credentials in your machine before running the example. See 
 [Configuration and credential file settings](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) for more information.
@@ -30,7 +34,7 @@ The following command can be used to run the sample of how to use this library.
 
 ``` bash
 spark-submit \
---packages com.fabiogouw:spark-aws-messaging:0.3.1,com.amazonaws:aws-java-sdk-sqs:1.12.13 \
+--packages com.fabiogouw:spark-aws-messaging:1.0.0,com.amazonaws:aws-java-sdk-sqs:1.12.13 \
 test.py sample.txt
 ```
 
@@ -68,7 +72,7 @@ This library is available at Maven Central repository, so you can reference it i
 <dependency>
     <groupId>com.fabiogouw</groupId>
     <artifactId>spark-aws-messaging</artifactId>
-    <version>0.4.0</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
