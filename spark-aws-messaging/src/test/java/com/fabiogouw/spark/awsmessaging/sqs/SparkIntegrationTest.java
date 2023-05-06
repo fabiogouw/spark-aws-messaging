@@ -54,7 +54,7 @@ public class SparkIntegrationTest {
     private ExecResult execSparkJob(String script, String... args) throws IOException, InterruptedException {
         String[] command = ArrayUtils.addAll(new String[] {"spark-submit", 
                 "--jars", 
-                "/home/spark-aws-messaging-0.5.0.jar,/home/deps/aws-java-sdk-core-1.12.13.jar,/home/deps/aws-java-sdk-sqs-1.12.13.jar",
+                "/home/spark-aws-messaging-1.0.0.jar,/home/deps/aws-java-sdk-core-1.12.13.jar,/home/deps/aws-java-sdk-sqs-1.12.13.jar",
                 "--master", 
                 "local",
                 script}, args);

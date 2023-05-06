@@ -51,13 +51,13 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public void write(InternalRow record) throws IOException {
-        Optional<MapData> arrayData = Optional.empty();
+        Optional<MapData> msgAttributesData = Optional.empty();
         if(msgAttributesColumnIndex >= 0) {
-            arrayData = Optional.of(record.getMap(msgAttributesColumnIndex));
+            msgAttributesData = Optional.of(record.getMap(msgAttributesColumnIndex));
         }
         SendMessageBatchRequestEntry msg = new SendMessageBatchRequestEntry()
                 .withMessageBody(record.getString(valueColumnIndex))
-                .withMessageAttributes(convertMapData(arrayData))
+                .withMessageAttributes(convertMapData(msgAttributesData))
                 .withId(UUID.randomUUID().toString());
         if(groupIdColumnIndex >= 0) {
             msg = msg.withMessageGroupId(record.getString(groupIdColumnIndex));
@@ -70,15 +70,12 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
 
     private Map<String, MessageAttributeValue> convertMapData(Optional<MapData> arrayData) {
         final Map<String, MessageAttributeValue> attributes = new HashMap<>();
-        if(arrayData.isPresent()) {
-            MapData currentArray = arrayData.get();
-            currentArray.foreach(DataTypes.StringType, DataTypes.StringType, (key, value) -> {
-                attributes.put(key.toString(), new MessageAttributeValue()
-                        .withDataType("String")
-                        .withStringValue(value.toString()));
-                return null;
-            });            
-        }
+        arrayData.ifPresent(mapData -> mapData.foreach(DataTypes.StringType, DataTypes.StringType, (key, value) -> {
+            attributes.put(key.toString(), new MessageAttributeValue()
+                    .withDataType("String")
+                    .withStringValue(value.toString()));
+            return null;
+        }));
         return attributes;
     }
 
