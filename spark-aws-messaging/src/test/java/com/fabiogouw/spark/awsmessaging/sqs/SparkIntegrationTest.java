@@ -41,7 +41,7 @@ public class SparkIntegrationTest {
             .withEnv("AWS_ACCESS_KEY_ID", "test")
             .withEnv("AWS_SECRET_KEY", "test")
             .withEnv("SPARK_MODE", "master");
-    
+
     public AmazonSQS configureQueue() {
         AmazonSQS sqs = AmazonSQSClientBuilder.standard()
                 .withEndpointConfiguration(localstack.getEndpointConfiguration(SQS))
@@ -50,12 +50,12 @@ public class SparkIntegrationTest {
         sqs.createQueue("my-test");
         return sqs;
     }
-    
+
     private ExecResult execSparkJob(String script, String... args) throws IOException, InterruptedException {
-        String[] command = ArrayUtils.addAll(new String[] {"spark-submit", 
-                "--jars", 
+        String[] command = ArrayUtils.addAll(new String[] {"spark-submit",
+                "--jars",
                 "/home/spark-aws-messaging-1.0.0.jar,/home/deps/aws-java-sdk-core-1.12.13.jar,/home/deps/aws-java-sdk-sqs-1.12.13.jar",
-                "--master", 
+                "--master",
                 "local",
                 script}, args);
         ExecResult result = spark.execInContainer(command);
@@ -63,7 +63,7 @@ public class SparkIntegrationTest {
         System.out.println(result.getStderr());
         return result;
     }
-    
+
     private List<Message> getMessagesPut(AmazonSQS sqs) {
         final String queueUrl = sqs.getQueueUrl("my-test").getQueueUrl()
                 .replace("localstack", localstack.getHost());
@@ -81,8 +81,8 @@ public class SparkIntegrationTest {
         AmazonSQS sqs = configureQueue();
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
-            "/home/sample.txt",
-            "http://localstack:4566");
+                "/home/sample.txt",
+                "http://localstack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
         Message message = getMessagesPut(sqs).get(0);
