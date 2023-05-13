@@ -19,7 +19,7 @@ import org.testcontainers.utility.MountableFile;
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
 
 @Testcontainers
@@ -64,29 +64,43 @@ public class SparkIntegrationTest {
         return result;
     }
     
-    private Message getMessagePut(AmazonSQS sqs) {
+    private List<Message> getMessagesPut(AmazonSQS sqs) {
         final String queueUrl = sqs.getQueueUrl("my-test").getQueueUrl()
                 .replace("localstack", localstack.getHost());
         final ReceiveMessageRequest request = new ReceiveMessageRequest(queueUrl)
+                .withMaxNumberOfMessages(10)
                 .withAttributeNames("All")
                 .withMessageAttributeNames("All");
         final ReceiveMessageResult receiveMessageResult = sqs.receiveMessage(request);
-        final List<Message> messages = receiveMessageResult.getMessages();
-        return messages.get(0);
+        return receiveMessageResult.getMessages();
     }
 
     @Test
     public void when_DataframeContainsValueColumn_should_PutAnSQSMessageUsingSpark() throws IOException, InterruptedException {
         // arrange
-        String expectedBody = "my message body";    // the same value in resources/sample.txt
         AmazonSQS sqs = configureQueue();
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
             "/home/sample.txt",
             "http://localstack:4566");
         // assert
-        assertEquals(0, result.getExitCode());
-        assertEquals(expectedBody, getMessagePut(sqs).getBody());
+        assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
+        Message message = getMessagesPut(sqs).get(0);
+        assertThat(message.getBody()).isEqualTo("my message body");  // the same value in resources/sample.txt
+    }
+
+    @Test
+    public void when_DataframeContainsValueColumnAndMultipleLines_should_PutAsManySQSMessagesInQueue() throws IOException, InterruptedException {
+        // arrange
+        AmazonSQS sqs = configureQueue();
+        // act
+        ExecResult result = execSparkJob("/home/sqs_write.py",
+                "/home/multiline_sample.txt",
+                "http://localstack:4566");
+        // assert
+        assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
+        List<Message> messages = getMessagesPut(sqs);
+        assertThat(messages).size().isEqualTo(10);
     }
 
     @Test
@@ -97,8 +111,10 @@ public class SparkIntegrationTest {
         ExecResult result = execSparkJob("/home/sqs_write_with_groupid.py",
                 "http://localstack:4566");
         // assert
-        assertEquals(0, result.getExitCode());
-        assertEquals("id 1", getMessagePut(sqs).getAttributes().get("MessageGroupId"));
+        assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
+        Message message = getMessagesPut(sqs).get(0);
+        assertThat(message.getAttributes()).containsKey("MessageGroupId")
+                .containsValue("id 1");
     }
 
     @Test
@@ -108,10 +124,10 @@ public class SparkIntegrationTest {
         // act
         ExecResult result = execSparkJob("/home/sqs_write_with_msgattribs.py",
                 "http://localstack:4566");
-        Message message = getMessagePut(sqs);
         // assert
-        assertEquals(0, result.getExitCode());
-        assertEquals("1000", message.getMessageAttributes().get("attribute-a").getStringValue());
-        assertEquals("2000", message.getMessageAttributes().get("attribute-b").getStringValue());
+        assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
+        Message message = getMessagesPut(sqs).get(0);
+        assertThat(message.getMessageAttributes().get("attribute-a").getStringValue()).isEqualTo("1000");
+        assertThat(message.getMessageAttributes().get("attribute-b").getStringValue()).isEqualTo("2000");
     }
 }
