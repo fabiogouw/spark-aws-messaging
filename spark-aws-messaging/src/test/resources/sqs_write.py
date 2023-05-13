@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     df.write.format("sqs").mode("append")\
         .option("queueName", "my-test")\
-        .option("batchSize", "10") \
+        .option("batchSize", "3") \
         .option("endpoint", sys.argv[2]) \
         .save()
 
