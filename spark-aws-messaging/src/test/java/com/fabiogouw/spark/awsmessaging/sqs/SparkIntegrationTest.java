@@ -2,6 +2,7 @@ package com.fabiogouw.spark.awsmessaging.sqs;
 
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
@@ -17,7 +18,9 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
@@ -42,13 +45,25 @@ public class SparkIntegrationTest {
             .withEnv("AWS_SECRET_KEY", "test")
             .withEnv("SPARK_MODE", "master");
 
-    public AmazonSQS configureQueue() {
+    private AmazonSQS configureQueue(boolean isFIFO) {
         AmazonSQS sqs = AmazonSQSClientBuilder.standard()
                 .withEndpointConfiguration(localstack.getEndpointConfiguration(SQS))
                 .withCredentials(localstack.getDefaultCredentialsProvider())
                 .build();
-        sqs.createQueue("my-test");
+        String queueName = "my-test";
+        Map<String, String> queueAttributes = new HashMap<>();
+        if(isFIFO) {
+            queueName += ".fifo";
+            queueAttributes.put("FifoQueue", "true");
+            queueAttributes.put("ContentBasedDeduplication", "true");
+        }
+        CreateQueueRequest createQueueRequest = new CreateQueueRequest(queueName).withAttributes(queueAttributes);
+        sqs.createQueue(createQueueRequest);
         return sqs;
+    }
+
+    private AmazonSQS configureQueue() {
+        return configureQueue(false);
     }
 
     private ExecResult execSparkJob(String script, String... args) throws IOException, InterruptedException {
@@ -64,8 +79,9 @@ public class SparkIntegrationTest {
         return result;
     }
 
-    private List<Message> getMessagesPut(AmazonSQS sqs) {
-        final String queueUrl = sqs.getQueueUrl("my-test").getQueueUrl()
+    private List<Message> getMessagesPut(AmazonSQS sqs, boolean isFIFO) {
+        final String queueName = "my-test" + (isFIFO ? ".fifo": "");
+        final String queueUrl = sqs.getQueueUrl(queueName).getQueueUrl()
                 .replace("localstack", localstack.getHost());
         final ReceiveMessageRequest request = new ReceiveMessageRequest(queueUrl)
                 .withMaxNumberOfMessages(10)
@@ -73,6 +89,10 @@ public class SparkIntegrationTest {
                 .withMessageAttributeNames("All");
         final ReceiveMessageResult receiveMessageResult = sqs.receiveMessage(request);
         return receiveMessageResult.getMessages();
+    }
+
+    private List<Message> getMessagesPut(AmazonSQS sqs){
+        return getMessagesPut(sqs, false);
     }
 
     @Test
@@ -120,15 +140,16 @@ public class SparkIntegrationTest {
     @Test
     public void when_DataframeContainsGroupIdColumn_should_PutAnSQSMessageWithMessageGroupIdUsingSpark() throws IOException, InterruptedException {
         // arrange
-        AmazonSQS sqs = configureQueue();
+        AmazonSQS sqs = configureQueue(true);
         // act
         ExecResult result = execSparkJob("/home/sqs_write_with_groupid.py",
                 "http://localstack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
-        Message message = getMessagesPut(sqs).get(0);
+        //Thread.sleep(60000);
+        Message message = getMessagesPut(sqs, true).get(0);
         assertThat(message.getAttributes()).containsKey("MessageGroupId")
-                .containsValue("id 1");
+                .containsValue("id1");
     }
 
     @Test
