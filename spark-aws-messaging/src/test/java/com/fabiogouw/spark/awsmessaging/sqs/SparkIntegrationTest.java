@@ -28,7 +28,7 @@ public class SparkIntegrationTest {
     private static final Network network = Network.newNetwork();
 
     @Container
-    private final LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:0.12.13"))
+    private final LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:2.1.0"))
             .withNetwork(network)
             .withNetworkAliases("localstack")
             .withServices(SQS);
@@ -101,6 +101,20 @@ public class SparkIntegrationTest {
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
         List<Message> messages = getMessagesPut(sqs);
         assertThat(messages).size().isEqualTo(10);
+    }
+
+    @Test
+    public void when_DataframeContainsDataExceedsSQSSizeLimit_should_FailWholeBatch() throws IOException, InterruptedException {
+        // arrange
+        AmazonSQS sqs = configureQueue();
+        // act
+        ExecResult result = execSparkJob("/home/sqs_write.py",
+                "/home/large_sample.txt",
+                "http://localstack:4566");
+        // assert
+        assertThat(result.getStderr()).as("Spark job should fail due to exceeding size limit").contains("Batch requests cannot be longer than 262144 bytes");
+        List<Message> messages = getMessagesPut(sqs);
+        assertThat(messages).size().as("No messages should be written when the batch fails").isEqualTo(0);
     }
 
     @Test
