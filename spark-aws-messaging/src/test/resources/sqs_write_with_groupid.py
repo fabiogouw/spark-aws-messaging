@@ -14,14 +14,14 @@ if __name__ == "__main__":
         .appName("SQS Write") \
         .getOrCreate()
 
-    data = [("value 1","id 1"),
-            ("value 2","id 2"),
-            ("value 3","id 1"),
-            ("value 4","id 2")]
+    data = [("value 1","id1"),
+            ("value 2","id2"),
+            ("value 3","id1"),
+            ("value 4","id2")]
 
     schema = StructType([
-        StructField("value",StringType(),True),
-        StructField("group_id",StringType(),True),
+        StructField("value",StringType(),False),
+        StructField("group_id",StringType(),False),
     ])
 
     df = spark.createDataFrame(data=data,schema=schema)
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     df.printSchema()
 
     df.write.format("sqs").mode("append") \
-        .option("queueName", "my-test") \
+        .option("queueName", "my-test.fifo") \
         .option("batchSize", "10") \
         .option("endpoint", sys.argv[1]) \
         .save()
