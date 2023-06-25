@@ -2,10 +2,7 @@ package com.fabiogouw.spark.awsmessaging.sqs;
 
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
-import com.amazonaws.services.sqs.model.CreateQueueRequest;
-import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
-import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.amazonaws.services.sqs.model.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Container.ExecResult;
@@ -132,9 +129,28 @@ public class SparkIntegrationTest {
                 "/home/large_sample.txt",
                 "http://localstack:4566");
         // assert
+        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotEqualTo(0);
         assertThat(result.getStderr()).as("Spark job should fail due to exceeding size limit").contains("Batch requests cannot be longer than 262144 bytes");
         List<Message> messages = getMessagesPut(sqs);
         assertThat(messages).size().as("No messages should be written when the batch fails").isEqualTo(0);
+    }
+
+    @Test
+    public void when_DataframeContainsLinesThatExceedsSQSMessageSizeLimit_should_ThrowAnException() throws IOException, InterruptedException {
+        // arrange
+        AmazonSQS sqs = configureQueue();
+        HashMap<String, String> attributes = new HashMap<>();
+        attributes.put("MaximumMessageSize", Integer.toString(1024));
+        sqs.setQueueAttributes(new SetQueueAttributesRequest(sqs.getQueueUrl("my-test").getQueueUrl(), attributes));
+        // act
+        ExecResult result = execSparkJob("/home/sqs_write.py",
+                "/home/multiline_large_sample.txt",
+                "http://localstack:4566");
+        // assert
+        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotEqualTo(0);
+        assertThat(result.getStderr()).as("Spark job should fail due to exceeding size limit").contains("Some messages failed to be sent to the SQS queue");
+        List<Message> messages = getMessagesPut(sqs);
+        assertThat(messages).size().as("Only messages up to 1024 should be written").isEqualTo(2);
     }
 
     @Test
