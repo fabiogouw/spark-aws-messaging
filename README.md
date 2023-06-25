@@ -78,6 +78,14 @@ This library is available at Maven Central repository, so you can reference it i
 
 The IAM permissions needed for this library to write on a SQS queue are *sqs:GetQueueUrl* and *sqs:SendMessage*.
 
+## Messaging delivery semantics and error handling
+
+Some messages might be duplicated. If something wrong happens when the data is being written by a worker node, Spark will retry the task in another node. Messages that have already been sent could be sent again.
+
+**The sink is at least once if you ensure that your code do not produce messages that fail to be delivered, like ones bigger than the MaximumMessageSize setting of the SQS queue. Currently, the implementation of this library doesn't validate such scenarios and some messages might "disappear" silently. This is a known bug and will be fixed soon.**
+
+It's advisable to validate the size of the messages to be sent until this fix is released.
+
 ## Architecture
 
 It's easy to get lost while understanding all the classes are needed, so we can create a custom sink for Spark. Here's a class diagram to make it a little easy to find yourself. Start at SQSSinkProvider, it's the class that we configure in Spark code as a *format* method's value.
