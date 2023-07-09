@@ -84,6 +84,9 @@ Some messages might be duplicated. If something wrong happens when the data is b
 
 The sink is at least once if you ensure that your code do not produce messages that fail to be delivered, like ones bigger than the MaximumMessageSize setting of the SQS queue (this specific case will result in throwing SQSSinkBatchResultException exceptions).
 
+
+It's advisable to validate the size of the messages to be sent until this fix is released.
+
 ## Architecture
 
 It's easy to get lost while understanding all the classes are needed, so we can create a custom sink for Spark. Here's a class diagram to make it a little easy to find yourself. Start at SQSSinkProvider, it's the class that we configure in Spark code as a *format* method's value.
