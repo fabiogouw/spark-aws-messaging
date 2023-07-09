@@ -95,16 +95,13 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
     }
 
     private void sendMessages() {
-        SendMessageBatchRequest batch = new SendMessageBatchRequest()
+        final SendMessageBatchRequest batch = new SendMessageBatchRequest()
                 .withQueueUrl(queueUrl)
                 .withEntries(messages);
         SendMessageBatchResult sendMessageBatchResult = sqs.sendMessageBatch(batch);
-        String[] failedMessages = sendMessageBatchResult.getFailed().stream()
-                .map(BatchResultErrorEntry::getMessage)
-                .distinct()
-                .toArray(String[]::new);
-        if(failedMessages.length > 0) {
-            throw new SQSSinkException("Some messages failed to be sent to the SQS queue with the following errors: [" + String.join("; ", failedMessages) + "]");
+        final List<BatchResultErrorEntry> errors = sendMessageBatchResult.getFailed();
+        if(errors.size() > 0) {
+            throw new SQSSinkBatchResultException.Builder().withErrors(errors).build();
         }
         messages.clear();
     }
