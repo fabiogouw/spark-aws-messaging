@@ -1,10 +1,7 @@
 package com.fabiogouw.spark.awsmessaging.sqs;
 
 import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
-import com.amazonaws.services.sqs.model.MessageAttributeValue;
-import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
-import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
+import com.amazonaws.services.sqs.model.*;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.util.MapData;
 import org.apache.spark.sql.connector.write.DataWriter;
@@ -81,12 +78,8 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public WriterCommitMessage commit() {
-        try {
-            if(messages.size() > 0) {
-                sendMessages();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if(messages.size() > 0) {
+            sendMessages();
         }
         return new SQSSinkWriterCommitMessage(partitionId, taskId);
     }
@@ -102,10 +95,14 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
     }
 
     private void sendMessages() {
-        SendMessageBatchRequest batch = new SendMessageBatchRequest()
+        final SendMessageBatchRequest batch = new SendMessageBatchRequest()
                 .withQueueUrl(queueUrl)
                 .withEntries(messages);
-        sqs.sendMessageBatch(batch);
+        SendMessageBatchResult sendMessageBatchResult = sqs.sendMessageBatch(batch);
+        final List<BatchResultErrorEntry> errors = sendMessageBatchResult.getFailed();
+        if(errors.size() > 0) {
+            throw new SQSSinkBatchResultException.Builder().withErrors(errors).build();
+        }
         messages.clear();
     }
 }
