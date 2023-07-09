@@ -9,13 +9,13 @@ It grabs the content of the first column of the dataframe and sends it to an AWS
 
 ```java
 df.write()
-    .format("sqs")
-    .mode(SaveMode.Append)
-    .option("region", "us-east-2")
-    .option("queueName", "my-test-queue")
-    .option("batchSize", "10")
-    .option("queueOwnerAWSAccountId", "123456789012") // optional
-    .save();
+        .format("sqs")
+        .mode(SaveMode.Append)
+        .option("region", "us-east-2")
+        .option("queueName", "my-test-queue")
+        .option("batchSize", "10")
+        .option("queueOwnerAWSAccountId", "123456789012") // optional
+        .save();
 ```
 
 The dataframe:
@@ -25,7 +25,7 @@ The dataframe:
 
 The folder [/spark-aws-messaging/src/test/resources](/spark-aws-messaging/src/test/resources) contains some PySpark simple examples used in the integration tests (the *endpoint* option is not required).
 
-Don't forget you'll need to configure the default credentials in your machine before running the example. See 
+Don't forget you'll need to configure the default credentials in your machine before running the example. See
 [Configuration and credential file settings](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) for more information.
 
 It also needs the *com.amazonaws:aws-java-sdk-sqs* package to run, so you can provide it through the *packages* parameter of spark-submit.
@@ -34,7 +34,7 @@ The following command can be used to run the sample of how to use this library.
 
 ``` bash
 spark-submit \
---packages com.fabiogouw:spark-aws-messaging:1.0.0,com.amazonaws:aws-java-sdk-sqs:1.12.13 \
+--packages com.fabiogouw:spark-aws-messaging:1.1.0,com.amazonaws:aws-java-sdk-sqs:1.12.13 \
 test.py sample.txt
 ```
 
@@ -66,17 +66,23 @@ if __name__ == "__main__":
 
     spark.stop()
 ```
-This library is available at Maven Central repository, so you can reference it in your project with the following snippet. 
+This library is available at Maven Central repository, so you can reference it in your project with the following snippet.
 
 ``` xml
 <dependency>
     <groupId>com.fabiogouw</groupId>
     <artifactId>spark-aws-messaging</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
 The IAM permissions needed for this library to write on a SQS queue are *sqs:GetQueueUrl* and *sqs:SendMessage*.
+
+## Messaging delivery semantics and error handling
+
+Some messages might be duplicated. If something wrong happens when the data is being written by a worker node, Spark will retry the task in another node. Messages that have already been sent could be sent again.
+
+The sink is at least once if you ensure that your code do not produce messages that fail to be delivered, like ones bigger than the MaximumMessageSize setting of the SQS queue (this specific case will result in throwing SQSSinkBatchResultException exceptions).
 
 ## Architecture
 
