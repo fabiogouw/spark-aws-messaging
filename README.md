@@ -80,9 +80,7 @@ The IAM permissions needed for this library to write on a SQS queue are *sqs:Get
 
 ## Messaging delivery semantics and error handling
 
-Some messages might be duplicated. If something wrong happens when the data is being written by a worker node, Spark will retry the task in another node. Messages that have already been sent could be sent again.
-
-The sink is at least once if you ensure that your code do not produce messages that fail to be delivered, like ones bigger than the MaximumMessageSize setting of the SQS queue (this specific case will result in throwing SQSSinkBatchResultException exceptions).
+The sink is at least once  so some messages might be duplicated. If something wrong happens when the data is being written by a worker node, Spark will retry the task in another node. Messages that have already been sent could be sent again.
 
 ## Architecture
 
