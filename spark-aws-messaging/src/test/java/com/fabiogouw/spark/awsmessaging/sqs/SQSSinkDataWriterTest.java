@@ -16,7 +16,6 @@ import scala.collection.Seq;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 
 import static org.mockito.Mockito.*;
 
@@ -32,7 +31,7 @@ public class SQSSinkDataWriterTest {
     public void when_ProvidedLessRowsThanBatchSize_should_NotSendMessageBatchToAWS() throws IOException {
         AmazonSQS mockSqs = mock(AmazonSQS.class);
         when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
-        SQSSinkDataWriter sut = new SQSSinkDataWriter(1, 2, mockSqs, 3, "", "", 0, -1, -1);
+        SQSSinkDataWriter sut = new SQSSinkDataWriter(1, 2, mockSqs, 3, "", 0, -1, -1);
         sut.write(createInternalRow(UTF8String.fromString("x")));
         verify(mockSqs, times(0)).sendMessageBatch(any(SendMessageBatchRequest.class));
     }
@@ -43,10 +42,21 @@ public class SQSSinkDataWriterTest {
         AmazonSQS mockSqs = mock(AmazonSQS.class);
         when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
         when(mockSqs.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(new SendMessageBatchResult());
-        SQSSinkDataWriter sut = new SQSSinkDataWriter(1, 2, mockSqs, batchSize, "", "", 0, -1, -1);
+        SQSSinkDataWriter sut = new SQSSinkDataWriter(1, 2, mockSqs, batchSize, "", 0, -1, -1);
         for(int i = 0; i < batchSize; i++) {
             sut.write(createInternalRow(UTF8String.fromString("x")));
         }
+        verify(mockSqs, times(1)).sendMessageBatch(any(SendMessageBatchRequest.class));
+    }
+
+    @Test
+    public void when_Committing_should_SendRemainingMessageBatchToAWSOneTime() throws IOException {
+        AmazonSQS mockSqs = mock(AmazonSQS.class);
+        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
+        when(mockSqs.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(new SendMessageBatchResult());
+        SQSSinkDataWriter sut = new SQSSinkDataWriter(1, 2, mockSqs, 3, "", 0, -1, -1);
+        sut.write(createInternalRow(UTF8String.fromString("x")));
+        sut.commit();
         verify(mockSqs, times(1)).sendMessageBatch(any(SendMessageBatchRequest.class));
     }
 }
