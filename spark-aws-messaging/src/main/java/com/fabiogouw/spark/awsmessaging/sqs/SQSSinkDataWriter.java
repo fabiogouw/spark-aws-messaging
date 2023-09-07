@@ -27,8 +27,7 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
                              long taskId,
                              AmazonSQS sqs,
                              int batchMaxSize,
-                             String queueName,
-                             String queueOwnerAWSAccountId,
+                             String queueUrl,
                              int valueColumnIndex,
                              int msgAttributesColumnIndex,
                              int groupIdColumnIndex) {
@@ -36,11 +35,7 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
         this.taskId = taskId;
         this.batchMaxSize = batchMaxSize;
         this.sqs = sqs;
-        GetQueueUrlRequest queueUrlRequest = new GetQueueUrlRequest(queueName);
-        if(!queueOwnerAWSAccountId.isEmpty()) {
-            queueUrlRequest.setQueueOwnerAWSAccountId(queueOwnerAWSAccountId);
-        }
-        queueUrl = sqs.getQueueUrl(queueUrlRequest).getQueueUrl();
+        this.queueUrl = queueUrl;
         this.valueColumnIndex = valueColumnIndex;
         this.msgAttributesColumnIndex = msgAttributesColumnIndex;
         this.groupIdColumnIndex = groupIdColumnIndex;
@@ -78,7 +73,7 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public WriterCommitMessage commit() {
-        if(messages.size() > 0) {
+        if(!messages.isEmpty()) {
             sendMessages();
         }
         return new SQSSinkWriterCommitMessage(partitionId, taskId);
@@ -100,7 +95,7 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
                 .withEntries(messages);
         SendMessageBatchResult sendMessageBatchResult = sqs.sendMessageBatch(batch);
         final List<BatchResultErrorEntry> errors = sendMessageBatchResult.getFailed();
-        if(errors.size() > 0) {
+        if(!errors.isEmpty()) {
             throw new SQSSinkBatchResultException.Builder().withErrors(errors).build();
         }
         messages.clear();
