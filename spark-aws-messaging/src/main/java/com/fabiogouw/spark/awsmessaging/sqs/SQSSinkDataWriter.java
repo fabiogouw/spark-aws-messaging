@@ -78,7 +78,7 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public WriterCommitMessage commit() {
-        if(messages.size() > 0) {
+        if(!messages.isEmpty()) {
             sendMessages();
         }
         return new SQSSinkWriterCommitMessage(partitionId, taskId);
@@ -100,7 +100,7 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
                 .withEntries(messages);
         SendMessageBatchResult sendMessageBatchResult = sqs.sendMessageBatch(batch);
         final List<BatchResultErrorEntry> errors = sendMessageBatchResult.getFailed();
-        if(errors.size() > 0) {
+        if(!errors.isEmpty()) {
             throw new SQSSinkBatchResultException.Builder().withErrors(errors).build();
         }
         messages.clear();
