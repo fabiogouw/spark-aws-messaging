@@ -129,7 +129,7 @@ public class SparkIntegrationTest {
                 "/home/large_sample.txt",
                 "http://localstack:4566");
         // assert
-        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotEqualTo(0);
+        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
         assertThat(result.getStderr()).as("Spark job should fail due to exceeding size limit").contains("Batch requests cannot be longer than 262144 bytes");
         List<Message> messages = getMessagesPut(sqs);
         assertThat(messages).size().as("No messages should be written when the batch fails").isEqualTo(0);
@@ -148,7 +148,7 @@ public class SparkIntegrationTest {
                 "/home/multiline_large_sample.txt",
                 "http://localstack:4566");
         // assert
-        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotEqualTo(0);
+        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
         assertThat(result.getStderr()).as("Spark job should fail due to exceeding size limit").contains("Some messages failed to be sent to the SQS queue");
         List<Message> messages = getMessagesPut(sqs);
         assertThat(messages).size().as("Only messages up to 1024 should be written").isEqualTo(2);
