@@ -2,6 +2,8 @@ plugins {
     id 'java'
     id 'maven'
     id 'signing'
+    id 'jacoco'
+    id "org.sonarqube" version "4.4.1.3373"
 }
 
 group = 'com.fabiogouw'
@@ -10,6 +12,14 @@ version = '1.1.0'
 
 repositories {
     mavenCentral()
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "fabiogouw_spark-aws-messaging"
+        property "sonar.organization", "fabiogouw"
+        property "sonar.host.url", "https://sonarcloud.io"
+    }
 }
 
 dependencies {
@@ -52,9 +62,17 @@ tasks.register('copyToLib', Copy) {
     from configurations.runtimeClasspath
 }
 
+jacocoTestReport {
+    reports {
+        xml.required = true
+    }
+    dependsOn(test)
+}
+
 test {
     useJUnitPlatform()
     dependsOn(copyToLib)
+    finalizedBy(jacocoTestReport)
 }
 
 uploadArchives {
