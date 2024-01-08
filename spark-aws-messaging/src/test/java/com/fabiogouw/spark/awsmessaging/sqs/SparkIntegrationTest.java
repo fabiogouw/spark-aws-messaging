@@ -35,6 +35,7 @@ public class SparkIntegrationTest {
     private final LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
             .withNetwork(network)
             .withNetworkAliases("localstack")
+            .withEnv("SQS_ENDPOINT_STRATEGY", "off")
             .withServices(SQS);
 
     @Container
@@ -83,11 +84,15 @@ public class SparkIntegrationTest {
         return result;
     }
 
+    private String getHostAccessibleQueueUrl(AmazonSQS sqs, String queueName) {
+        return sqs.getQueueUrl(queueName).getQueueUrl()
+                .replace("localstack", localstack.getHost())
+                .replace("4566", localstack.getMappedPort(4566).toString());
+    }
+
     private List<Message> getMessagesPut(AmazonSQS sqs, boolean isFIFO) {
         final String queueName = "my-test" + (isFIFO ? ".fifo": "");
-        final String queueUrl = sqs.getQueueUrl(queueName).getQueueUrl()
-                .replace("sqs.us-east-1.localstack", localstack.getHost())
-                .replace("4566", localstack.getMappedPort(4566).toString());
+        final String queueUrl = getHostAccessibleQueueUrl(sqs, queueName);
         final ReceiveMessageRequest request = new ReceiveMessageRequest(queueUrl)
                 .withMaxNumberOfMessages(10)
                 .withAttributeNames("All")
@@ -111,9 +116,8 @@ public class SparkIntegrationTest {
                 "http://localstack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
-        //Message message = getMessagesPut(sqs).get(0);
-        getMessagesPut(sqs);
-        //assertThat(message.getBody()).isEqualTo("my message body");  // the same value in resources/sample.txt
+        Message message = getMessagesPut(sqs).get(0);
+        assertThat(message.getBody()).isEqualTo("my message body");  // the same value in resources/sample.txt
     }
 
     @Test
@@ -151,7 +155,7 @@ public class SparkIntegrationTest {
         AmazonSQS sqs = configureQueue();
         HashMap<String, String> attributes = new HashMap<>();
         attributes.put("MaximumMessageSize", Integer.toString(1024));
-        sqs.setQueueAttributes(new SetQueueAttributesRequest(sqs.getQueueUrl("my-test").getQueueUrl(), attributes));
+        sqs.setQueueAttributes(new SetQueueAttributesRequest(getHostAccessibleQueueUrl(sqs, "my-test"), attributes));
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
                 "/home/multiline_large_sample.txt",
