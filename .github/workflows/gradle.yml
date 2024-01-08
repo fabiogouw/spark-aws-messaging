@@ -36,4 +36,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew build sonar -PossrhUsername=null -PossrhPassword=null --exclude-task spark-aws-messaging:build --info --rerun-tasks
+      run: ./gradlew build -PossrhUsername=null -PossrhPassword=null --exclude-task spark-aws-messaging:publish --info --rerun-tasks
+    - name: Execute Sonar analysis
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: ./gradlew jacocoTestReport sonar -PossrhUsername=null -PossrhPassword=null --exclude-task spark-aws-messaging:build --info
