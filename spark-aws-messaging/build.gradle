@@ -27,9 +27,8 @@ sonar {
 }
 
 dependencies {
-    // See comments in PR https://github.com/fabiogouw/spark-aws-messaging/pull/16 for further information about spark-* libs versions
-    implementation group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.2.4'
-    compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.2.4'
+    implementation group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.1.3'
+    compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.1.3'
 
     implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.13')
     implementation 'com.amazonaws:aws-java-sdk-sqs'
@@ -40,7 +39,7 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers:1.19.3'
     testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
     testImplementation 'org.testcontainers:localstack:1.19.3'
-    testImplementation group: 'org.apache.spark', name: 'spark-catalyst_2.12', version: '3.1.2'
+    testImplementation group: 'org.apache.spark', name: 'spark-catalyst_2.12', version: '3.1.3'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.11.0'
 }
@@ -63,7 +62,6 @@ jacocoTestReport {
 }
 
 test {
-    //jvmArgs '--add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED'
     useJUnitPlatform()
     dependsOn(copyToLib)
     finalizedBy(jacocoTestReport)

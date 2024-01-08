@@ -13,22 +13,13 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Set up JDK 8
-      uses: actions/setup-java@v1
-      with:
-        java-version: 8
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew build -PossrhUsername=null -PossrhPassword=null --exclude-task spark-aws-messaging:publish --info --rerun-tasks
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: 17
         distribution: 'zulu'
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
     - name: Cache SonarCloud packages
       uses: actions/cache@v3
       with:
@@ -41,8 +32,8 @@ jobs:
         path: ~/.gradle/caches
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
         restore-keys: ${{ runner.os }}-gradle
-    - name: Execute Sonar analysis
+    - name: Build with Gradle and execute Sonar analysis
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew sonar -PossrhUsername=null -PossrhPassword=null --exclude-task spark-aws-messaging:build --info
+      run: ./gradlew build sonar -PossrhUsername=null -PossrhPassword=null --exclude-task spark-aws-messaging:build --info --rerun-tasks
