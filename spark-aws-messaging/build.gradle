@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'maven'
+    id 'maven-publish'
     id 'signing'
 }
 
@@ -29,22 +29,9 @@ dependencies {
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.11.0'
 }
 
-tasks.register('javadocJar', Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-tasks.register('sourcesJar', Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    archives javadocJar, sourcesJar
-}
-
-signing {
-    sign configurations.archives
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 tasks.register('copyToLib', Copy) {
@@ -57,46 +44,62 @@ test {
     dependsOn(copyToLib)
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-
-            snapshotRepository(url: "https://s01.oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-
-            pom.project {
-                name 'Spark AWS Messaging providers'
-                packaging 'jar'
-                // optionally artifactId can be defined here
-                description 'AWS SQS sink provider'
-                url 'https://github.com/fabiogouw/spark-aws-messaging'
-
-                scm {
-                    connection 'scm:git:git://github.com/fabiogouw/spark-aws-messaging.git'
-                    developerConnection 'scm:git:git@github.com:fabiogouw/spark-aws-messaging.git'
-                    url 'https://github.com/fabiogouw/spark-aws-messaging'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = archivesBaseName
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
                 }
-
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name = 'Spark AWS Messaging providers'
+                description = 'A custom sink provider for Apache Spark that sends the content of a dataframe to an AWS SQS'
+                url = 'https://github.com/fabiogouw/spark-aws-messaging'
                 licenses {
                     license {
-                        name 'MIT License'
-                        url 'https://opensource.org/licenses/MIT'
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
                     }
                 }
-
                 developers {
                     developer {
-                        id 'fabiogouw'
-                        name 'Fabio Gouw'
+                        id = 'fabiogouw'
+                        name = 'Fabio Gouw'
                     }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/fabiogouw/spark-aws-messaging.git'
+                    developerConnection = 'scm:git:git@github.com:fabiogouw/spark-aws-messaging.git'
+                    url = 'https://github.com/fabiogouw/spark-aws-messaging'
                 }
             }
         }
+    }
+
+    repositories {
+        maven {
+            credentials {
+                username = "$ossrhUsername"
+                password = "$ossrhPassword"
+            }
+
+            url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+javadoc {
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
     }
 }

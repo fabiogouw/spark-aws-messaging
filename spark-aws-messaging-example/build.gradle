@@ -19,7 +19,7 @@ dependencies {
 
 task copyToLib(type: Copy) {
     into "${buildDir}/libs"
-    from configurations.runtime
+    from configurations.runtimeClasspath
 }
 
 test {
