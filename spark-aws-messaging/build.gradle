@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'maven'
+    id 'maven-publish'
     id 'signing'
     id 'jacoco'
     id "org.sonarqube" version "4.4.1.3373"
@@ -31,30 +31,17 @@ dependencies {
     testImplementation group: 'org.netbeans.external', name: 'org-apache-commons-lang3', version: 'RELEASE130'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
-    testImplementation 'org.testcontainers:testcontainers:1.17.6'
-    testImplementation 'org.testcontainers:junit-jupiter:1.17.6'
-    testImplementation 'org.testcontainers:localstack:1.17.6'
+    testImplementation 'org.testcontainers:testcontainers:1.19.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    testImplementation 'org.testcontainers:localstack:1.19.3'
     testImplementation group: 'org.apache.spark', name: 'spark-catalyst_2.12', version: '3.1.2'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.11.0'
 }
 
-tasks.register('javadocJar', Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-tasks.register('sourcesJar', Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    archives javadocJar, sourcesJar
-}
-
-signing {
-    sign configurations.archives
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 tasks.register('copyToLib', Copy) {
@@ -75,46 +62,62 @@ test {
     finalizedBy(jacocoTestReport)
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-
-            snapshotRepository(url: "https://s01.oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-
-            pom.project {
-                name 'Spark AWS Messaging providers'
-                packaging 'jar'
-                // optionally artifactId can be defined here
-                description 'AWS SQS sink provider'
-                url 'https://github.com/fabiogouw/spark-aws-messaging'
-
-                scm {
-                    connection 'scm:git:git://github.com/fabiogouw/spark-aws-messaging.git'
-                    developerConnection 'scm:git:git@github.com:fabiogouw/spark-aws-messaging.git'
-                    url 'https://github.com/fabiogouw/spark-aws-messaging'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = archivesBaseName
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
                 }
-
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name = 'Spark AWS Messaging providers'
+                description = 'A custom sink provider for Apache Spark that sends the content of a dataframe to an AWS SQS'
+                url = 'https://github.com/fabiogouw/spark-aws-messaging'
                 licenses {
                     license {
-                        name 'MIT License'
-                        url 'https://opensource.org/licenses/MIT'
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
                     }
                 }
-
                 developers {
                     developer {
-                        id 'fabiogouw'
-                        name 'Fabio Gouw'
+                        id = 'fabiogouw'
+                        name = 'Fabio Gouw'
                     }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/fabiogouw/spark-aws-messaging.git'
+                    developerConnection = 'scm:git:git@github.com:fabiogouw/spark-aws-messaging.git'
+                    url = 'https://github.com/fabiogouw/spark-aws-messaging'
                 }
             }
         }
+    }
+
+    repositories {
+        maven {
+            credentials {
+                username = "$ossrhUsername"
+                password = "$ossrhPassword"
+            }
+
+            url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+javadoc {
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
     }
 }

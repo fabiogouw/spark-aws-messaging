@@ -42,4 +42,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew build spark-aws-messaging:sonar -PossrhUsername=null -PossrhPassword=null -x spark-aws-messaging:uploadArchives -x spark-aws-messaging:signArchives --info --rerun-tasks
+      run: ./gradlew build -PossrhUsername=null -PossrhPassword=null --exclude-task spark-aws-messaging:publish --info --rerun-tasks
