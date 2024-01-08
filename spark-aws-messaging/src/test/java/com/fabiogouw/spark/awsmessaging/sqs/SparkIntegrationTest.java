@@ -1,5 +1,9 @@
 package com.fabiogouw.spark.awsmessaging.sqs;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.*;
@@ -28,9 +32,10 @@ public class SparkIntegrationTest {
     private static final Network network = Network.newNetwork();
 
     @Container
-    private final LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:2.1.0"))
+    private final LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
             .withNetwork(network)
             .withNetworkAliases("localstack")
+            .withEnv("SQS_ENDPOINT_STRATEGY", "off")
             .withServices(SQS);
 
     @Container
@@ -44,8 +49,11 @@ public class SparkIntegrationTest {
 
     private AmazonSQS configureQueue(boolean isFIFO) {
         AmazonSQS sqs = AmazonSQSClientBuilder.standard()
-                .withEndpointConfiguration(localstack.getEndpointConfiguration(SQS))
-                .withCredentials(localstack.getDefaultCredentialsProvider())
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
+                        localstack.getEndpointOverride(SQS).toString(),
+                        localstack.getRegion()))
+                .withCredentials(new AWSStaticCredentialsProvider(
+                        new BasicAWSCredentials(localstack.getAccessKey(), localstack.getSecretKey())))
                 .build();
         String queueName = "my-test";
         Map<String, String> queueAttributes = new HashMap<>();
@@ -76,10 +84,15 @@ public class SparkIntegrationTest {
         return result;
     }
 
+    private String getHostAccessibleQueueUrl(AmazonSQS sqs, String queueName) {
+        return sqs.getQueueUrl(queueName).getQueueUrl()
+                .replace("localstack", localstack.getHost())
+                .replace("4566", localstack.getMappedPort(4566).toString());
+    }
+
     private List<Message> getMessagesPut(AmazonSQS sqs, boolean isFIFO) {
         final String queueName = "my-test" + (isFIFO ? ".fifo": "");
-        final String queueUrl = sqs.getQueueUrl(queueName).getQueueUrl()
-                .replace("localstack", localstack.getHost());
+        final String queueUrl = getHostAccessibleQueueUrl(sqs, queueName);
         final ReceiveMessageRequest request = new ReceiveMessageRequest(queueUrl)
                 .withMaxNumberOfMessages(10)
                 .withAttributeNames("All")
@@ -93,9 +106,10 @@ public class SparkIntegrationTest {
     }
 
     @Test
-    public void when_DataframeContainsValueColumn_should_PutAnSQSMessageUsingSpark() throws IOException, InterruptedException {
+    void when_DataframeContainsValueColumn_should_PutAnSQSMessageUsingSpark() throws IOException, InterruptedException {
         // arrange
         AmazonSQS sqs = configureQueue();
+        //Thread.sleep(30000);
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
                 "/home/sample.txt",
@@ -107,7 +121,7 @@ public class SparkIntegrationTest {
     }
 
     @Test
-    public void when_DataframeContainsValueColumnAndMultipleLines_should_PutAsManySQSMessagesInQueue() throws IOException, InterruptedException {
+    void when_DataframeContainsValueColumnAndMultipleLines_should_PutAsManySQSMessagesInQueue() throws IOException, InterruptedException {
         // arrange
         AmazonSQS sqs = configureQueue();
         // act
@@ -121,7 +135,7 @@ public class SparkIntegrationTest {
     }
 
     @Test
-    public void when_DataframeContainsDataExceedsSQSSizeLimit_should_FailWholeBatch() throws IOException, InterruptedException {
+    void when_DataframeContainsDataExceedsSQSSizeLimit_should_FailWholeBatch() throws IOException, InterruptedException {
         // arrange
         AmazonSQS sqs = configureQueue();
         // act
@@ -129,34 +143,32 @@ public class SparkIntegrationTest {
                 "/home/large_sample.txt",
                 "http://localstack:4566");
         // assert
-        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotEqualTo(0);
+        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
         assertThat(result.getStderr()).as("Spark job should fail due to exceeding size limit").contains("Batch requests cannot be longer than 262144 bytes");
         List<Message> messages = getMessagesPut(sqs);
         assertThat(messages).size().as("No messages should be written when the batch fails").isEqualTo(0);
     }
 
-    /* TODO: fix the https://github.com/localstack/localstack/issues/8570 is resolved
     @Test
-    public void when_DataframeContainsLinesThatExceedsSQSMessageSizeLimit_should_ThrowAnException() throws IOException, InterruptedException {
+    void when_DataframeContainsLinesThatExceedsSQSMessageSizeLimit_should_ThrowAnException() throws IOException, InterruptedException {
         // arrange
         AmazonSQS sqs = configureQueue();
         HashMap<String, String> attributes = new HashMap<>();
         attributes.put("MaximumMessageSize", Integer.toString(1024));
-        sqs.setQueueAttributes(new SetQueueAttributesRequest(sqs.getQueueUrl("my-test").getQueueUrl(), attributes));
+        sqs.setQueueAttributes(new SetQueueAttributesRequest(getHostAccessibleQueueUrl(sqs, "my-test"), attributes));
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
                 "/home/multiline_large_sample.txt",
                 "http://localstack:4566");
         // assert
-        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotEqualTo(0);
+        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
         assertThat(result.getStderr()).as("Spark job should fail due to exceeding size limit").contains("Some messages failed to be sent to the SQS queue");
         List<Message> messages = getMessagesPut(sqs);
         assertThat(messages).size().as("Only messages up to 1024 should be written").isEqualTo(2);
     }
-    */
 
     @Test
-    public void when_DataframeContainsGroupIdColumn_should_PutAnSQSMessageWithMessageGroupIdUsingSpark() throws IOException, InterruptedException {
+    void when_DataframeContainsGroupIdColumn_should_PutAnSQSMessageWithMessageGroupIdUsingSpark() throws IOException, InterruptedException {
         // arrange
         AmazonSQS sqs = configureQueue(true);
         // act
@@ -164,14 +176,13 @@ public class SparkIntegrationTest {
                 "http://localstack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
-        //Thread.sleep(60000);
         Message message = getMessagesPut(sqs, true).get(0);
         assertThat(message.getAttributes()).containsKey("MessageGroupId")
                 .containsValue("id1");
     }
 
     @Test
-    public void when_DataframeContainsMsgAttributesColumn_should_PutAnSQSMessageWithMessageAttributesUsingSpark() throws IOException, InterruptedException {
+    void when_DataframeContainsMsgAttributesColumn_should_PutAnSQSMessageWithMessageAttributesUsingSpark() throws IOException, InterruptedException {
         // arrange
         AmazonSQS sqs = configureQueue();
         // act
