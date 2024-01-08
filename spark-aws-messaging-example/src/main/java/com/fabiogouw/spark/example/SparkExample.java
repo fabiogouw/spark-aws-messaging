@@ -19,6 +19,9 @@ public class SparkExample {
      * build/resources/main/sample.txt us-east-2 test 10
      */
 
+    private static final String EVENT_ID_COL = "eventId";
+    private static final String EVENT_TYPE_COL = "eventType";
+
     public static void main(String[] args) {
 
         if(args.length != 4) {
@@ -33,10 +36,10 @@ public class SparkExample {
         Dataset<Row> df = spark
                 .read()
                 .text(args[0]);
-        df = df.withColumn("eventType",  lit("dummy"))
-                .withColumn("eventId",  lit(UUID.randomUUID().toString()));
-        df = df.withColumn("msg_attributes",  array(map(lit("eventType"), col("eventType")),
-                map(lit("eventId"), col("eventId"))));
+        df = df.withColumn(EVENT_TYPE_COL,  lit("dummy"))
+                .withColumn(EVENT_ID_COL,  lit(UUID.randomUUID().toString()));
+        df = df.withColumn("msg_attributes",  array(map(lit(EVENT_TYPE_COL), col(EVENT_TYPE_COL)),
+                map(lit(EVENT_ID_COL), col(EVENT_ID_COL))));
         df.show();
         df.printSchema();
 

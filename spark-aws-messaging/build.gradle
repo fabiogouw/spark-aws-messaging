@@ -2,6 +2,8 @@ plugins {
     id 'java'
     id 'maven-publish'
     id 'signing'
+    id 'jacoco'
+    id "org.sonarqube" version "4.4.1.3373"
 }
 
 group = 'com.fabiogouw'
@@ -12,9 +14,22 @@ repositories {
     mavenCentral()
 }
 
+compileJava {
+    options.release = 8
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "fabiogouw_spark-aws-messaging"
+        property "sonar.organization", "fabiogouw"
+        property "sonar.host.url", "https://sonarcloud.io"
+    }
+}
+
 dependencies {
-    implementation group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.1.2'
-    compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.1.2'
+    implementation group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.1.3'
+    compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.1.3'
+
     implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.13')
     implementation 'com.amazonaws:aws-java-sdk-sqs'
 
@@ -24,7 +39,7 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers:1.19.3'
     testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
     testImplementation 'org.testcontainers:localstack:1.19.3'
-    testImplementation group: 'org.apache.spark', name: 'spark-catalyst_2.12', version: '3.1.2'
+    testImplementation group: 'org.apache.spark', name: 'spark-catalyst_2.12', version: '3.1.3'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.11.0'
 }
@@ -39,9 +54,17 @@ tasks.register('copyToLib', Copy) {
     from configurations.runtimeClasspath
 }
 
+jacocoTestReport {
+    reports {
+        xml.required = true
+    }
+    dependsOn(test)
+}
+
 test {
     useJUnitPlatform()
     dependsOn(copyToLib)
+    finalizedBy(jacocoTestReport)
 }
 
 publishing {

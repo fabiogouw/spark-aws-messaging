@@ -8,9 +8,9 @@ import org.apache.spark.sql.types.StructType;
 public class SQSSinkWriteBuilder implements WriteBuilder {
 
     private LogicalWriteInfo info;
-    private static final String messageAttributesColumnName = "msg_attributes";
-    private static final String groupIdColumnName = "group_id";
-    private static final String valueColumnName = "value";
+    private static final String MESSAGE_ATTRIBUTES_COLUMN_NAME = "msg_attributes";
+    private static final String GROUP_ID_COLUMN_NAME = "group_id";
+    private static final String VALUE_COLUMN_NAME = "value";
 
     public SQSSinkWriteBuilder(LogicalWriteInfo info) {
         this.info = info;
@@ -30,9 +30,9 @@ public class SQSSinkWriteBuilder implements WriteBuilder {
                 info.options().get("queueOwnerAWSAccountId"),
                 batchSize,
                 service,
-                schema.fieldIndex(valueColumnName),
-                schema.getFieldIndex(messageAttributesColumnName).isEmpty() ? -1 : schema.fieldIndex(messageAttributesColumnName),
-                schema.getFieldIndex(groupIdColumnName).isEmpty() ? -1 : schema.fieldIndex(groupIdColumnName)
+                schema.fieldIndex(VALUE_COLUMN_NAME),
+                schema.getFieldIndex(MESSAGE_ATTRIBUTES_COLUMN_NAME).isEmpty() ? -1 : schema.fieldIndex(MESSAGE_ATTRIBUTES_COLUMN_NAME),
+                schema.getFieldIndex(GROUP_ID_COLUMN_NAME).isEmpty() ? -1 : schema.fieldIndex(GROUP_ID_COLUMN_NAME)
                 );
         return new SQSSinkBatchWrite(options);
     }
