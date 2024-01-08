@@ -106,7 +106,7 @@ public class SparkIntegrationTest {
     }
 
     @Test
-    public void when_DataframeContainsValueColumn_should_PutAnSQSMessageUsingSpark() throws IOException, InterruptedException {
+    void when_DataframeContainsValueColumn_should_PutAnSQSMessageUsingSpark() throws IOException, InterruptedException {
         // arrange
         AmazonSQS sqs = configureQueue();
         //Thread.sleep(30000);
@@ -121,7 +121,7 @@ public class SparkIntegrationTest {
     }
 
     @Test
-    public void when_DataframeContainsValueColumnAndMultipleLines_should_PutAsManySQSMessagesInQueue() throws IOException, InterruptedException {
+    void when_DataframeContainsValueColumnAndMultipleLines_should_PutAsManySQSMessagesInQueue() throws IOException, InterruptedException {
         // arrange
         AmazonSQS sqs = configureQueue();
         // act
@@ -135,7 +135,7 @@ public class SparkIntegrationTest {
     }
 
     @Test
-    public void when_DataframeContainsDataExceedsSQSSizeLimit_should_FailWholeBatch() throws IOException, InterruptedException {
+    void when_DataframeContainsDataExceedsSQSSizeLimit_should_FailWholeBatch() throws IOException, InterruptedException {
         // arrange
         AmazonSQS sqs = configureQueue();
         // act
@@ -143,14 +143,14 @@ public class SparkIntegrationTest {
                 "/home/large_sample.txt",
                 "http://localstack:4566");
         // assert
-        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotEqualTo(0);
+        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
         assertThat(result.getStderr()).as("Spark job should fail due to exceeding size limit").contains("Batch requests cannot be longer than 262144 bytes");
         List<Message> messages = getMessagesPut(sqs);
         assertThat(messages).size().as("No messages should be written when the batch fails").isEqualTo(0);
     }
 
     @Test
-    public void when_DataframeContainsLinesThatExceedsSQSMessageSizeLimit_should_ThrowAnException() throws IOException, InterruptedException {
+    void when_DataframeContainsLinesThatExceedsSQSMessageSizeLimit_should_ThrowAnException() throws IOException, InterruptedException {
         // arrange
         AmazonSQS sqs = configureQueue();
         HashMap<String, String> attributes = new HashMap<>();
@@ -161,14 +161,14 @@ public class SparkIntegrationTest {
                 "/home/multiline_large_sample.txt",
                 "http://localstack:4566");
         // assert
-        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotEqualTo(0);
+        assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
         assertThat(result.getStderr()).as("Spark job should fail due to exceeding size limit").contains("Some messages failed to be sent to the SQS queue");
         List<Message> messages = getMessagesPut(sqs);
         assertThat(messages).size().as("Only messages up to 1024 should be written").isEqualTo(2);
     }
 
     @Test
-    public void when_DataframeContainsGroupIdColumn_should_PutAnSQSMessageWithMessageGroupIdUsingSpark() throws IOException, InterruptedException {
+    void when_DataframeContainsGroupIdColumn_should_PutAnSQSMessageWithMessageGroupIdUsingSpark() throws IOException, InterruptedException {
         // arrange
         AmazonSQS sqs = configureQueue(true);
         // act
@@ -176,14 +176,13 @@ public class SparkIntegrationTest {
                 "http://localstack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
-        //Thread.sleep(60000);
         Message message = getMessagesPut(sqs, true).get(0);
         assertThat(message.getAttributes()).containsKey("MessageGroupId")
                 .containsValue("id1");
     }
 
     @Test
-    public void when_DataframeContainsMsgAttributesColumn_should_PutAnSQSMessageWithMessageAttributesUsingSpark() throws IOException, InterruptedException {
+    void when_DataframeContainsMsgAttributesColumn_should_PutAnSQSMessageWithMessageAttributesUsingSpark() throws IOException, InterruptedException {
         // arrange
         AmazonSQS sqs = configureQueue();
         // act
