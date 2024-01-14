@@ -20,9 +20,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class SQSSinkDataWriterFactoryTest {
+class SQSSinkDataWriterFactoryTest {
     @Test
-    public void when_CustomEndpointIsNotProvided_should_CreateDataWriterWithOnlyRegionConfiguration() {
+    void when_CustomEndpointIsNotProvided_should_CreateDataWriterWithOnlyRegionConfiguration() {
         // Arrange
         AmazonSQS mockSqs = mock(AmazonSQS.class);
         when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
@@ -49,7 +49,7 @@ public class SQSSinkDataWriterFactoryTest {
     }
 
     @Test
-    public void when_CustomEndpointIsProvided_should_CreateDataWriterWithEndpointConfiguration() {
+    void when_CustomEndpointIsProvided_should_CreateDataWriterWithEndpointConfiguration() {
         // Arrange
         AmazonSQS mockSqs = mock(AmazonSQS.class);
         when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
@@ -75,7 +75,7 @@ public class SQSSinkDataWriterFactoryTest {
     }
 
     @Test
-    public void when_AnotherOwnerAWSAccountIdIsProvided_should_ConfigureUrlRequestWithThisQueueOwnerAWSAccountId() {
+    void when_AnotherOwnerAWSAccountIdIsProvided_should_ConfigureUrlRequestWithThisQueueOwnerAWSAccountId() {
         // Arrange
         AmazonSQS mockSqs = mock(AmazonSQS.class);
         when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());

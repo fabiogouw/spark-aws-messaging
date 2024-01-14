@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class SQSSinkDataWriterTest {
+class SQSSinkDataWriterTest {
 
     private InternalRow createInternalRow(Object... values) {
         Seq<Object> x = JavaConverters.asScalaBuffer(new ArrayList<>(Arrays.asList(values))).toSeq();
@@ -33,7 +33,7 @@ public class SQSSinkDataWriterTest {
     }
 
     @Test
-    public void when_ProvidedLessRowsThanBatchSize_should_NotSendMessageBatchToAWS() throws IOException {
+    void when_ProvidedLessRowsThanBatchSize_should_NotSendMessageBatchToAWS() throws IOException {
         // Arrange
         AmazonSQS mockSqs = mock(AmazonSQS.class);
         when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
@@ -46,7 +46,7 @@ public class SQSSinkDataWriterTest {
     }
 
     @Test
-    public void when_ProvidedRowsEqualsToBatchSize_should_SendMessageBatchToAWSOneTime() throws IOException {
+    void when_ProvidedRowsEqualsToBatchSize_should_SendMessageBatchToAWSOneTime() throws IOException {
         // Arrange
         int batchSize = 3;
         AmazonSQS mockSqs = mock(AmazonSQS.class);
@@ -63,7 +63,7 @@ public class SQSSinkDataWriterTest {
     }
 
     @Test
-    public void when_Committing_should_SendRemainingMessageBatchToAWSOneTime() throws IOException {
+    void when_Committing_should_SendRemainingMessageBatchToAWSOneTime() throws IOException {
         // Arrange
         AmazonSQS mockSqs = mock(AmazonSQS.class);
         when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
@@ -78,7 +78,7 @@ public class SQSSinkDataWriterTest {
     }
 
     @Test
-    public void when_PassingAGroupIdColumn_should_SendMessageBatchToAWSOneTimeWithGroupId() throws IOException {
+    void when_PassingAGroupIdColumn_should_SendMessageBatchToAWSOneTimeWithGroupId() throws IOException {
         // Arrange
         AmazonSQS mockSqs = mock(AmazonSQS.class);
         when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
@@ -95,7 +95,7 @@ public class SQSSinkDataWriterTest {
     }
 
     @Test
-    public void when_PassingAMessageAttributeColumn_should_SendMessageBatchToAWSOneTimeWithMessageAttributes() throws IOException {
+    void when_PassingAMessageAttributeColumn_should_SendMessageBatchToAWSOneTimeWithMessageAttributes() throws IOException {
         // Arrange
         AmazonSQS mockSqs = mock(AmazonSQS.class);
         when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
