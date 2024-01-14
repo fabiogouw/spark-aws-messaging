@@ -15,7 +15,7 @@ repositories {
 }
 
 compileJava {
-    options.release = 8
+    options.release = 8 // Spark targets Java 8
 }
 
 sonar {
@@ -41,7 +41,7 @@ dependencies {
     testImplementation 'org.testcontainers:localstack:1.19.3'
     testImplementation group: 'org.apache.spark', name: 'spark-catalyst_2.12', version: '3.1.3'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
-    testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.11.0'
+    testImplementation group: 'org.mockito', name: 'mockito-inline', version: '5.2.0'
 }
 
 java {

@@ -10,7 +10,7 @@ import org.apache.spark.sql.connector.write.DataWriterFactory;
 
 public class SQSSinkDataWriterFactory implements DataWriterFactory {
 
-    private SQSSinkOptions options;
+    private final SQSSinkOptions options;
 
     public SQSSinkDataWriterFactory(SQSSinkOptions options) {
         this.options = options;
@@ -45,7 +45,6 @@ public class SQSSinkDataWriterFactory implements DataWriterFactory {
         else {
             clientBuilder.withRegion(options.getRegion());
         }
-        final AmazonSQS sqs = clientBuilder.build();
-        return sqs;
+        return clientBuilder.build();
     }
 }
