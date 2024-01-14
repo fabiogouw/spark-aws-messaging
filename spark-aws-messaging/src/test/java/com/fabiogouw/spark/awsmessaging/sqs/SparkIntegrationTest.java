@@ -115,7 +115,7 @@ public class SparkIntegrationTest {
                 "/home/sample.txt",
                 "http://localstack:4566");
         // assert
-        assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
+        assertThat(result.getExitCode()).as("Spark job should execute with no errors").isZero();
         Message message = getMessagesPut(sqs).get(0);
         assertThat(message.getBody()).isEqualTo("my message body");  // the same value in resources/sample.txt
     }
@@ -129,7 +129,7 @@ public class SparkIntegrationTest {
                 "/home/multiline_sample.txt",
                 "http://localstack:4566");
         // assert
-        assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
+        assertThat(result.getExitCode()).as("Spark job should execute with no errors").isZero();
         List<Message> messages = getMessagesPut(sqs);
         assertThat(messages).size().isEqualTo(10);
     }
@@ -146,7 +146,7 @@ public class SparkIntegrationTest {
         assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
         assertThat(result.getStderr()).as("Spark job should fail due to exceeding size limit").contains("Batch requests cannot be longer than 262144 bytes");
         List<Message> messages = getMessagesPut(sqs);
-        assertThat(messages).size().as("No messages should be written when the batch fails").isEqualTo(0);
+        assertThat(messages).size().as("No messages should be written when the batch fails").isZero();
     }
 
     @Test
@@ -175,7 +175,7 @@ public class SparkIntegrationTest {
         ExecResult result = execSparkJob("/home/sqs_write_with_groupid.py",
                 "http://localstack:4566");
         // assert
-        assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
+        assertThat(result.getExitCode()).as("Spark job should execute with no errors").isZero();
         Message message = getMessagesPut(sqs, true).get(0);
         assertThat(message.getAttributes()).containsKey("MessageGroupId")
                 .containsValue("id1");
@@ -189,7 +189,7 @@ public class SparkIntegrationTest {
         ExecResult result = execSparkJob("/home/sqs_write_with_msgattribs.py",
                 "http://localstack:4566");
         // assert
-        assertThat(result.getExitCode()).as("Spark job should execute with no errors").isEqualTo(0);
+        assertThat(result.getExitCode()).as("Spark job should execute with no errors").isZero();
         Message message = getMessagesPut(sqs).get(0);
         assertThat(message.getMessageAttributes().get("attribute-a").getStringValue()).isEqualTo("1000");
         assertThat(message.getMessageAttributes().get("attribute-b").getStringValue()).isEqualTo("2000");

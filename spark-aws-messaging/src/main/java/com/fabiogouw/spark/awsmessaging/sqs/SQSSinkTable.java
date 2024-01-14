@@ -12,7 +12,7 @@ import java.util.Set;
 public class SQSSinkTable implements SupportsWrite {
 
     private Set<TableCapability> capabilities;
-    private StructType schema;
+    private final StructType schema;
 
     public SQSSinkTable(StructType schema) {
         this.schema = schema;

@@ -7,7 +7,7 @@ import org.apache.spark.sql.types.StructType;
 
 public class SQSSinkWriteBuilder implements WriteBuilder {
 
-    private LogicalWriteInfo info;
+    private final LogicalWriteInfo info;
     private static final String MESSAGE_ATTRIBUTES_COLUMN_NAME = "msg_attributes";
     private static final String GROUP_ID_COLUMN_NAME = "group_id";
     private static final String VALUE_COLUMN_NAME = "value";

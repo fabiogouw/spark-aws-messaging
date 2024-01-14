@@ -24,6 +24,6 @@ public class SQSSinkWriterCommitMessage implements WriterCommitMessage {
 
     @Override
     public int hashCode() {
-        return Objects.hash(partitionId);
+        return Objects.hash(partitionId + taskId);
     }
 }

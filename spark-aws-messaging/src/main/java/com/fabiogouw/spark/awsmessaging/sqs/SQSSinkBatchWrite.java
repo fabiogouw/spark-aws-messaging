@@ -17,11 +17,11 @@ public class SQSSinkBatchWrite implements BatchWrite {
 
     @Override
     public void commit(WriterCommitMessage[] messages) {
-
+        // nothing to commit here, since this sink is not atomic
     }
 
     @Override
     public void abort(WriterCommitMessage[] messages) {
-
+        // nothing to abort here, since this sink is not atomic
     }
 }
