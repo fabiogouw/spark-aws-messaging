@@ -81,12 +81,12 @@ public class SQSSinkDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public void abort() {
-
+        // nothing to abort here, since this sink is not atomic
     }
 
     @Override
     public void close() {
-
+        // nothing to close
     }
 
     private void sendMessages() {
