@@ -1,6 +1,5 @@
 package com.fabiogouw.spark.awsmessaging.sqs;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
@@ -30,6 +29,9 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 public class SparkIntegrationTest {
 
     private static final Network network = Network.newNetwork();
+    private static final String libSparkAWSMessaging = "spark-aws-messaging-1.2.0.jar";
+    private static final String libAWSJavaSdkCore = "aws-java-sdk-core-1.12.13.jar";
+    private static final String libAWSJavaSdkSqs = "aws-java-sdk-sqs-1.12.13.jar";
 
     @Container
     private final LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
@@ -40,8 +42,10 @@ public class SparkIntegrationTest {
 
     @Container
     private final GenericContainer spark = new GenericContainer(DockerImageName.parse("bitnami/spark:3.3.2"))
-            .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0744), "/home/")
-            .withCopyFileToContainer(MountableFile.forHostPath("build/libs/.", 0555), "/home/")
+            .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0445), "/home/")
+            .withCopyFileToContainer(MountableFile.forHostPath("build/libs/" + libSparkAWSMessaging, 0445), "/home/")
+            .withCopyFileToContainer(MountableFile.forHostPath("build/libs/deps/" + libAWSJavaSdkCore, 0445), "/home/")
+            .withCopyFileToContainer(MountableFile.forHostPath("build/libs/deps/" + libAWSJavaSdkSqs, 0445), "/home/")
             .withNetwork(network)
             .withEnv("AWS_ACCESS_KEY_ID", "test")
             .withEnv("AWS_SECRET_KEY", "test")
@@ -74,7 +78,7 @@ public class SparkIntegrationTest {
     private ExecResult execSparkJob(String script, String... args) throws IOException, InterruptedException {
         String[] command = ArrayUtils.addAll(new String[] {"spark-submit",
                 "--jars",
-                "/home/spark-aws-messaging-1.1.0.jar,/home/deps/aws-java-sdk-core-1.12.13.jar,/home/deps/aws-java-sdk-sqs-1.12.13.jar",
+                "/home/" + libSparkAWSMessaging + ",/home/" + libAWSJavaSdkCore + ",/home/" + libAWSJavaSdkSqs,
                 "--master",
                 "local",
                 script}, args);
@@ -144,7 +148,7 @@ public class SparkIntegrationTest {
                 "http://localstack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
-        assertThat(result.getStderr()).as("Spark job should fail due to exceeding size limit").contains("Batch requests cannot be longer than 262144 bytes");
+        assertThat(result.getStdout()).as("Spark job should fail due to exceeding size limit").contains("Batch requests cannot be longer than 262144 bytes");
         List<Message> messages = getMessagesPut(sqs);
         assertThat(messages).size().as("No messages should be written when the batch fails").isZero();
     }
@@ -162,7 +166,7 @@ public class SparkIntegrationTest {
                 "http://localstack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
-        assertThat(result.getStderr()).as("Spark job should fail due to exceeding size limit").contains("Some messages failed to be sent to the SQS queue");
+        assertThat(result.getStdout()).as("Spark job should fail due to exceeding size limit").contains("Some messages failed to be sent to the SQS queue");
         List<Message> messages = getMessagesPut(sqs);
         assertThat(messages).size().as("Only messages up to 1024 should be written").isEqualTo(2);
     }
