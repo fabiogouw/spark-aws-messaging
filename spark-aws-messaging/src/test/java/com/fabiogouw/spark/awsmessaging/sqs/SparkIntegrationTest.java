@@ -29,7 +29,7 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 public class SparkIntegrationTest {
 
     private static final Network network = Network.newNetwork();
-    private static final String libSparkAWSMessaging = "spark-aws-messaging-1.2.0.jar";
+    private static final String libSparkAWSMessaging = "spark-aws-messaging-1.1.1.jar";
     private static final String libAWSJavaSdkCore = "aws-java-sdk-core-1.12.13.jar";
     private static final String libAWSJavaSdkSqs = "aws-java-sdk-sqs-1.12.13.jar";
 
