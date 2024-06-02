@@ -42,7 +42,7 @@ public class SparkIntegrationTest {
 
     @Container
     private final GenericContainer spark = new GenericContainer(DockerImageName.parse("bitnami/spark:3.3.2"))
-            .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0445), "/home/")
+            .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0777), "/home/")
             .withCopyFileToContainer(MountableFile.forHostPath("build/libs/" + libSparkAWSMessaging, 0445), "/home/")
             .withCopyFileToContainer(MountableFile.forHostPath("build/libs/deps/" + libAWSJavaSdkCore, 0445), "/home/")
             .withCopyFileToContainer(MountableFile.forHostPath("build/libs/deps/" + libAWSJavaSdkSqs, 0445), "/home/")
