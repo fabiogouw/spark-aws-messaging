@@ -39,7 +39,7 @@ public class SparkIntegrationTest {
             .withServices(SQS);
 
     @Container
-    private final GenericContainer spark = new GenericContainer(DockerImageName.parse("bitnami/spark:3.1.2"))
+    private final GenericContainer spark = new GenericContainer(DockerImageName.parse("bitnami/spark:3.3.2"))
             .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0744), "/home/")
             .withCopyFileToContainer(MountableFile.forHostPath("build/libs/.", 0555), "/home/")
             .withNetwork(network)
