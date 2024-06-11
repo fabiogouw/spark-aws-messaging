@@ -13,7 +13,6 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
@@ -25,8 +24,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
 
-@Testcontainers
-public class SparkIntegrationTest {
+public abstract class SparkIntegrationTest {
 
     private static final Network network = Network.newNetwork();
     private static final String libSparkAWSMessaging = "spark-aws-messaging-1.1.1.jar";
@@ -34,22 +32,27 @@ public class SparkIntegrationTest {
     private static final String libAWSJavaSdkSqs = "aws-java-sdk-sqs-1.12.13.jar";
 
     @Container
-    private final LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
-            .withNetwork(network)
-            .withNetworkAliases("localstack")
-            .withEnv("SQS_ENDPOINT_STRATEGY", "off")
-            .withServices(SQS);
+    private final GenericContainer spark;
 
     @Container
-    private final GenericContainer spark = new GenericContainer(DockerImageName.parse("bitnami/spark:3.3.2"))
-            .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0777), "/home/")
-            .withCopyFileToContainer(MountableFile.forHostPath("build/libs/" + libSparkAWSMessaging, 0445), "/home/")
-            .withCopyFileToContainer(MountableFile.forHostPath("build/libs/deps/" + libAWSJavaSdkCore, 0445), "/home/")
-            .withCopyFileToContainer(MountableFile.forHostPath("build/libs/deps/" + libAWSJavaSdkSqs, 0445), "/home/")
-            .withNetwork(network)
-            .withEnv("AWS_ACCESS_KEY_ID", "test")
-            .withEnv("AWS_SECRET_KEY", "test")
-            .withEnv("SPARK_MODE", "master");
+    private final LocalStackContainer localstack;
+
+    public SparkIntegrationTest(String sparkImage) {
+        spark = new GenericContainer(DockerImageName.parse(sparkImage))
+                .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0777), "/home/")
+                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/" + libSparkAWSMessaging, 0445), "/home/")
+                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/deps/" + libAWSJavaSdkCore, 0445), "/home/")
+                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/deps/" + libAWSJavaSdkSqs, 0445), "/home/")
+                .withNetwork(network)
+                .withEnv("AWS_ACCESS_KEY_ID", "test")
+                .withEnv("AWS_SECRET_KEY", "test")
+                .withEnv("SPARK_MODE", "master");
+        localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
+                .withNetwork(network)
+                .withNetworkAliases("localstack")
+                .withEnv("SQS_ENDPOINT_STRATEGY", "off")
+                .withServices(SQS);
+    }
 
     private AmazonSQS configureQueue(boolean isFIFO) {
         AmazonSQS sqs = AmazonSQSClientBuilder.standard()
