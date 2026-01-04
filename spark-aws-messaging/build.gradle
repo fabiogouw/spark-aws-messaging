@@ -30,8 +30,10 @@ dependencies {
     implementation group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.3.2'
     compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.3.2'
 
-    implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.13')
-    implementation 'com.amazonaws:aws-java-sdk-sqs'
+    // Use AWS SDK for Java v2 (BOM + SQS module)
+    // NOTE: adjust the BOM version to the desired/latest 2.x release if needed
+    implementation platform('software.amazon.awssdk:bom:2.20.0')
+    implementation 'software.amazon.awssdk:sqs'
 
     testImplementation group: 'org.netbeans.external', name: 'org-apache-commons-lang3', version: 'RELEASE130'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'

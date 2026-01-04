@@ -1,9 +1,11 @@
 package com.fabiogouw.spark.awsmessaging.sqs;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
-import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.SqsClientBuilder;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
@@ -11,20 +13,29 @@ import org.apache.spark.sql.connector.write.DataWriterFactory;
 public class SQSSinkDataWriterFactory implements DataWriterFactory {
 
     private final SQSSinkOptions options;
+    // optional injected builder (used by tests)
+    private final software.amazon.awssdk.services.sqs.SqsClientBuilder injectedBuilder;
 
     public SQSSinkDataWriterFactory(SQSSinkOptions options) {
+        this(options, null);
+    }
+
+    // test-friendly constructor that accepts a pre-configured SqsClientBuilder
+    public SQSSinkDataWriterFactory(SQSSinkOptions options, software.amazon.awssdk.services.sqs.SqsClientBuilder injectedBuilder) {
         this.options = options;
+        this.injectedBuilder = injectedBuilder;
     }
 
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId) {
 
-        final AmazonSQS sqs = getAmazonSQS();
-        final GetQueueUrlRequest queueUrlRequest = new GetQueueUrlRequest(options.getQueueName());
+        final SqsClient sqs = getAmazonSQS();
+        GetQueueUrlRequest.Builder queueUrlRequestBuilder = GetQueueUrlRequest.builder().queueName(options.getQueueName());
         if(!options.getQueueOwnerAWSAccountId().isEmpty()) {
-            queueUrlRequest.setQueueOwnerAWSAccountId(options.getQueueOwnerAWSAccountId());
+            queueUrlRequestBuilder.queueOwnerAWSAccountId(options.getQueueOwnerAWSAccountId());
         }
-        final String queueUrl = sqs.getQueueUrl(queueUrlRequest).getQueueUrl();
+        final GetQueueUrlResponse queueUrlResponse = sqs.getQueueUrl(queueUrlRequestBuilder.build());
+        final String queueUrl = queueUrlResponse.queueUrl();
         return new SQSSinkDataWriter(partitionId,
                 taskId,
                 sqs,
@@ -35,15 +46,16 @@ public class SQSSinkDataWriterFactory implements DataWriterFactory {
                 options.getGroupIdColumnIndex());
     }
 
-    private AmazonSQS getAmazonSQS() {
-        AmazonSQSClientBuilder clientBuilder = AmazonSQSClientBuilder.standard();
+    private SqsClient getAmazonSQS() {
+        SqsClientBuilder clientBuilder = injectedBuilder != null
+                ? injectedBuilder
+                : SqsClient.builder().credentialsProvider(DefaultCredentialsProvider.create());
         if(!options.getEndpoint().isEmpty()) {
-            AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(
-                    options.getEndpoint(), options.getRegion());
-            clientBuilder.withEndpointConfiguration(endpointConfiguration);
+            clientBuilder.endpointOverride(java.net.URI.create(options.getEndpoint()));
         }
-        else {
-            clientBuilder.withRegion(options.getRegion());
+        // map region string to Region enum if possible
+        if(options.getRegion() != null && !options.getRegion().isEmpty()) {
+            clientBuilder.region(Region.of(options.getRegion()));
         }
         return clientBuilder.build();
     }

@@ -1,10 +1,10 @@
 package com.fabiogouw.spark.awsmessaging.sqs;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
-import com.amazonaws.services.sqs.model.GetQueueUrlResult;
-import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
-import com.amazonaws.services.sqs.model.SendMessageBatchResult;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchResponse;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.util.ArrayBasedMapData;
 import org.apache.spark.sql.catalyst.util.GenericArrayData;
@@ -35,8 +35,8 @@ class SQSSinkDataWriterTest {
     @Test
     void when_ProvidedLessRowsThanBatchSize_should_NotSendMessageBatchToAWS() throws IOException {
         // Arrange
-        AmazonSQS mockSqs = mock(AmazonSQS.class);
-        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
+        SqsClient mockSqs = mock(SqsClient.class);
+        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(GetQueueUrlResponse.builder().queueUrl("http://q").build());
         try(SQSSinkDataWriter sut = new SQSSinkDataWriter(1, 2, mockSqs, 3, "", 0, -1, -1)) {
             // Act
             sut.write(createInternalRow(UTF8String.fromString("x")));
@@ -49,9 +49,9 @@ class SQSSinkDataWriterTest {
     void when_ProvidedRowsEqualsToBatchSize_should_SendMessageBatchToAWSOneTime() throws IOException {
         // Arrange
         int batchSize = 3;
-        AmazonSQS mockSqs = mock(AmazonSQS.class);
-        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
-        when(mockSqs.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(new SendMessageBatchResult());
+        SqsClient mockSqs = mock(SqsClient.class);
+        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(GetQueueUrlResponse.builder().queueUrl("http://q").build());
+        when(mockSqs.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(SendMessageBatchResponse.builder().build());
         try(SQSSinkDataWriter sut = new SQSSinkDataWriter(1, 2, mockSqs, batchSize, "", 0, -1, -1)) {
             // Act
             for(int i = 0; i < batchSize; i++) {
@@ -65,9 +65,9 @@ class SQSSinkDataWriterTest {
     @Test
     void when_Committing_should_SendRemainingMessageBatchToAWSOneTime() throws IOException {
         // Arrange
-        AmazonSQS mockSqs = mock(AmazonSQS.class);
-        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
-        when(mockSqs.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(new SendMessageBatchResult());
+        SqsClient mockSqs = mock(SqsClient.class);
+        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(GetQueueUrlResponse.builder().queueUrl("http://q").build());
+        when(mockSqs.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(SendMessageBatchResponse.builder().build());
         try(SQSSinkDataWriter sut = new SQSSinkDataWriter(1, 2, mockSqs, 3, "", 0, -1, -1)) {
             sut.write(createInternalRow(UTF8String.fromString("x")));
             // Act
@@ -80,9 +80,9 @@ class SQSSinkDataWriterTest {
     @Test
     void when_PassingAGroupIdColumn_should_SendMessageBatchToAWSOneTimeWithGroupId() throws IOException {
         // Arrange
-        AmazonSQS mockSqs = mock(AmazonSQS.class);
-        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
-        when(mockSqs.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(new SendMessageBatchResult());
+        SqsClient mockSqs = mock(SqsClient.class);
+        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(GetQueueUrlResponse.builder().queueUrl("http://q").build());
+        when(mockSqs.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(SendMessageBatchResponse.builder().build());
         try(SQSSinkDataWriter sut = new SQSSinkDataWriter(1, 2, mockSqs, 1, "", 0, -1, 1)) {
             // Act
             sut.write(createInternalRow(UTF8String.fromString("x"), UTF8String.fromString("id")));
@@ -91,15 +91,15 @@ class SQSSinkDataWriterTest {
         ArgumentCaptor<SendMessageBatchRequest> argumentCaptor = ArgumentCaptor.forClass(SendMessageBatchRequest.class);
         verify(mockSqs).sendMessageBatch(argumentCaptor.capture());
         SendMessageBatchRequest capturedArgument = argumentCaptor.getValue();
-        assertThat(capturedArgument.getEntries().get(0).getMessageGroupId()).isEqualTo("id");
+        assertThat(capturedArgument.entries().get(0).messageGroupId()).isEqualTo("id");
     }
 
     @Test
     void when_PassingAMessageAttributeColumn_should_SendMessageBatchToAWSOneTimeWithMessageAttributes() throws IOException {
         // Arrange
-        AmazonSQS mockSqs = mock(AmazonSQS.class);
-        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
-        when(mockSqs.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(new SendMessageBatchResult());
+        SqsClient mockSqs = mock(SqsClient.class);
+        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(GetQueueUrlResponse.builder().queueUrl("http://q").build());
+        when(mockSqs.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(SendMessageBatchResponse.builder().build());
         ArrayBasedMapData map = new ArrayBasedMapData(new GenericArrayData(Collections.singletonList("attribute-a")), new GenericArrayData(Collections.singletonList("attribute")));
         try(SQSSinkDataWriter sut = new SQSSinkDataWriter(1, 2, mockSqs, 1, "", 0, 1, 0)){
             // Act
@@ -109,6 +109,6 @@ class SQSSinkDataWriterTest {
         ArgumentCaptor<SendMessageBatchRequest> argumentCaptor = ArgumentCaptor.forClass(SendMessageBatchRequest.class);
         verify(mockSqs).sendMessageBatch(argumentCaptor.capture());
         SendMessageBatchRequest capturedArgument = argumentCaptor.getValue();
-        assertThat(capturedArgument.getEntries().get(0).getMessageAttributes().get("attribute-a").getStringValue()).isEqualTo("attribute");
+        assertThat(capturedArgument.entries().get(0).messageAttributes().get("attribute-a").stringValue()).isEqualTo("attribute");
     }
 }

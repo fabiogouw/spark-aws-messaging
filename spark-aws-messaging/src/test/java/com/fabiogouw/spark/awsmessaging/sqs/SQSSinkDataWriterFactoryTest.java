@@ -1,14 +1,14 @@
 package com.fabiogouw.spark.awsmessaging.sqs;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
-import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
-import com.amazonaws.services.sqs.model.GetQueueUrlResult;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.SqsClientBuilder;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -22,85 +22,79 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 class SQSSinkDataWriterFactoryTest {
     @Test
-    void when_CustomEndpointIsNotProvided_should_CreateDataWriterWithOnlyRegionConfiguration() {
+    void wifwhen_CustomEndpointIsNotProvided_should_CreateDataWriterWithOnlyRegionConfiguration() {
         // Arrange
-        AmazonSQS mockSqs = mock(AmazonSQS.class);
-        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
-        AmazonSQSClientBuilder mockSqsClientBuilder = mock(AmazonSQSClientBuilder.class);
+        SqsClient mockSqs = mock(SqsClient.class);
+        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(GetQueueUrlResponse.builder().queueUrl("http://q").build());
+        SqsClientBuilder mockSqsClientBuilder = mock(SqsClientBuilder.class);
         when(mockSqsClientBuilder.build()).thenReturn(mockSqs);
-        try (MockedStatic<AmazonSQSClientBuilder> utilities = Mockito.mockStatic(AmazonSQSClientBuilder.class)) {
-            utilities.when(AmazonSQSClientBuilder::standard).thenReturn(mockSqsClientBuilder);
-            SQSSinkDataWriterFactory sut = new SQSSinkDataWriterFactory(new SQSSinkOptions("us-east-1",
-                    null,
-                    "my-test",
-                    null,
-                    3,
-                    SQS,
-                    0,
-                    -1,
-                    -1));
-            // Act
-            DataWriter<InternalRow> writer = sut.createWriter(0, 0);
-            // Assert
-            assertThat(writer).isNotNull();
-            verify(mockSqsClientBuilder, times(0)).withEndpointConfiguration(any(AwsClientBuilder.EndpointConfiguration.class));
-            verify(mockSqsClientBuilder, times(1)).withRegion(any(String.class));
-        }
+        SQSSinkDataWriterFactory sut = new SQSSinkDataWriterFactory(new SQSSinkOptions("us-east-1",
+                null,
+                "my-test",
+                null,
+                3,
+                SQS,
+                0,
+                -1,
+                -1),
+                mockSqsClientBuilder);
+        // Act
+        DataWriter<InternalRow> writer = sut.createWriter(0, 0);
+        // Assert
+        assertThat(writer).isNotNull();
+        verify(mockSqsClientBuilder, times(0)).endpointOverride(any(java.net.URI.class));
+        verify(mockSqsClientBuilder, times(1)).region(any());
     }
 
     @Test
     void when_CustomEndpointIsProvided_should_CreateDataWriterWithEndpointConfiguration() {
         // Arrange
-        AmazonSQS mockSqs = mock(AmazonSQS.class);
-        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
-        AmazonSQSClientBuilder mockSqsClientBuilder = mock(AmazonSQSClientBuilder.class);
+        SqsClient mockSqs = mock(SqsClient.class);
+        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(GetQueueUrlResponse.builder().queueUrl("http://q").build());
+        SqsClientBuilder mockSqsClientBuilder = mock(SqsClientBuilder.class);
         when(mockSqsClientBuilder.build()).thenReturn(mockSqs);
-        try (MockedStatic<AmazonSQSClientBuilder> utilities = Mockito.mockStatic(AmazonSQSClientBuilder.class)) {
-            utilities.when(AmazonSQSClientBuilder::standard).thenReturn(mockSqsClientBuilder);
-            SQSSinkDataWriterFactory sut = new SQSSinkDataWriterFactory(new SQSSinkOptions("us-east-1",
-                    "http://host:4566",
-                    "my-test",
-                    null,
-                    3,
-                    SQS,
-                    0,
-                    -1,
-                    -1));
-            // Act
-            DataWriter<InternalRow> writer = sut.createWriter(0, 0);
-            // Assert
-            assertThat(writer).isNotNull();
-            verify(mockSqsClientBuilder, times(1)).withEndpointConfiguration(any(AwsClientBuilder.EndpointConfiguration.class));
-        }
+        SQSSinkDataWriterFactory sut = new SQSSinkDataWriterFactory(new SQSSinkOptions("us-east-1",
+                "http://host:4566",
+                "my-test",
+                null,
+                3,
+                SQS,
+                0,
+                -1,
+                -1),
+                mockSqsClientBuilder);
+        // Act
+        DataWriter<InternalRow> writer = sut.createWriter(0, 0);
+        // Assert
+        assertThat(writer).isNotNull();
+        verify(mockSqsClientBuilder, times(1)).endpointOverride(any(java.net.URI.class));
     }
 
     @Test
     void when_AnotherOwnerAWSAccountIdIsProvided_should_ConfigureUrlRequestWithThisQueueOwnerAWSAccountId() {
         // Arrange
-        AmazonSQS mockSqs = mock(AmazonSQS.class);
-        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(new GetQueueUrlResult());
-        AmazonSQSClientBuilder mockSqsClientBuilder = mock(AmazonSQSClientBuilder.class);
+        SqsClient mockSqs = mock(SqsClient.class);
+        when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(GetQueueUrlResponse.builder().queueUrl("http://q").build());
+        SqsClientBuilder mockSqsClientBuilder = mock(SqsClientBuilder.class);
         when(mockSqsClientBuilder.build()).thenReturn(mockSqs);
 
-        try (MockedStatic<AmazonSQSClientBuilder> utilities = Mockito.mockStatic(AmazonSQSClientBuilder.class)) {
-            utilities.when(AmazonSQSClientBuilder::standard).thenReturn(mockSqsClientBuilder);
-            try(MockedConstruction<GetQueueUrlRequest> mockGetQueueUrlRequest = Mockito.mockConstruction(GetQueueUrlRequest.class)) {
-
-                SQSSinkDataWriterFactory sut = new SQSSinkDataWriterFactory(new SQSSinkOptions("us-east-1",
-                        null,
-                        "my-test",
-                        "1234567890",
-                        3,
-                        SQS,
-                        0,
-                        -1,
-                        -1));
-                // Act
-                DataWriter<InternalRow> writer = sut.createWriter(0, 0);
-                // Assert
-                assertThat(writer).isNotNull();
-                verify(mockGetQueueUrlRequest.constructed().get(0), times(1)).setQueueOwnerAWSAccountId("1234567890");
-            }
-        }
+        SQSSinkDataWriterFactory sut = new SQSSinkDataWriterFactory(new SQSSinkOptions("us-east-1",
+                null,
+                "my-test",
+                "1234567890",
+                3,
+                SQS,
+                0,
+                -1,
+                -1),
+                mockSqsClientBuilder);
+        // Act
+        DataWriter<InternalRow> writer = sut.createWriter(0, 0);
+        // Assert
+        assertThat(writer).isNotNull();
+        // capture the request sent to getQueueUrl and assert owner id
+        ArgumentCaptor<GetQueueUrlRequest> captor = ArgumentCaptor.forClass(GetQueueUrlRequest.class);
+        verify(mockSqs, times(1)).getQueueUrl(captor.capture());
+        assertThat(captor.getValue().queueOwnerAWSAccountId()).isEqualTo("1234567890");
     }
 }
