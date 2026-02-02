@@ -2,6 +2,7 @@ package com.fabiogouw.spark.awsmessaging.sqs;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.*;
@@ -16,9 +17,14 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
+
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
@@ -29,8 +35,6 @@ public abstract class SparkIntegrationTest {
 
     private static final Network network = Network.newNetwork();
     private static final String libSparkAWSMessaging = "spark-aws-messaging-1.1.1.jar";
-    private static final String libAWSJavaSdkCore = "software.amazon.awssdk-bom-2.20.0.jar";
-    private static final String libAWSJavaSdkSqs = "software.amazon.awssdk-sqs-2.20.0.jar";
 
     @Container
     private final GenericContainer spark;
@@ -38,17 +42,15 @@ public abstract class SparkIntegrationTest {
     @Container
     private final LocalStackContainer localstack;
 
-    public SparkIntegrationTest(String sparkImage) {
-        spark = new GenericContainer(DockerImageName.parse(sparkImage))
-                .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0777), "/tmp/")
-                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/" + libSparkAWSMessaging, 0445), "/tmp/")
-                // copy the SDK v2 jars (we assume BOM & module jars are available under build/libs/deps)
-                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/deps/software.amazon.awssdk-sqs-2.20.0.jar", 0445), "/tmp/")
-                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/deps/software.amazon.awssdk-core-2.20.0.jar", 0445), "/tmp/")
+    public SparkIntegrationTest(String sparkImage) throws IOException {
+        var sparkContainer = new GenericContainer(DockerImageName.parse(sparkImage))
+                .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0777), "/home/")
+                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/" + libSparkAWSMessaging, 0445), "/home/")
                 .withNetwork(network)
                 .withEnv("AWS_ACCESS_KEY_ID", "test")
-                .withEnv("AWS_SECRET_KEY", "test")
+                .withEnv("AWS_SECRET_ACCESS_KEY", "test")
                 .withEnv("SPARK_MODE", "master");
+        spark = copyAllDependencyFilesToContainer(sparkContainer);
         localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
                 .withNetwork(network)
                 .withNetworkAliases("localstack")
@@ -56,8 +58,19 @@ public abstract class SparkIntegrationTest {
                 .withServices(SQS);
     }
 
+    private static GenericContainer<?> copyAllDependencyFilesToContainer(GenericContainer<?> container) throws IOException {
+        Path dir = Paths.get("build/libs/deps");
+        try (Stream<Path> stream = Files.list(dir)) {
+            stream.filter(Files::isRegularFile)
+                    .forEach(p -> container.withCopyFileToContainer(
+                            MountableFile.forHostPath(p.toString(), 0445),"/home/"));
+        }
+        return container;
+    }
+
     private SqsClient configureQueue(boolean isFIFO) {
         SqsClient sqs = SqsClient.builder()
+                .httpClientBuilder(UrlConnectionHttpClient.builder())
                 .endpointOverride(localstack.getEndpointOverride(SQS))
                 .region(Region.of(localstack.getRegion()))
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey())))
@@ -78,14 +91,23 @@ public abstract class SparkIntegrationTest {
         return configureQueue(false);
     }
 
+    private static String[] listFileNames(String dirPath) throws IOException {
+        Path dir = Paths.get(dirPath);
+        try (Stream<Path> stream = Files.list(dir)) {
+            return stream.filter(Files::isRegularFile)
+                    .map(p -> p.getFileName().toString())
+                    .toArray(String[]::new);
+        }
+    }
+
+    private static String buildSparkLibPath() throws IOException {
+        return "/home/" + libSparkAWSMessaging + ",/home/" + String.join(",/home/", listFileNames("build/libs/deps"));
+    }
+
     private ExecResult execSparkJob(String script, String... args) throws IOException, InterruptedException {
-        ExecResult result1 = spark.execInContainer("mkdir /tmp/libs");
-        System.out.println(result1.getStdout());
-        ExecResult result2 = spark.execInContainer("pwd");
-        System.out.println(result2.getStdout());
         String[] command = ArrayUtils.addAll(new String[] {"spark-submit",
                 "--jars",
-                "/tmp/" + libSparkAWSMessaging + ",/tmp/" + libAWSJavaSdkCore + ",/tmp/" + libAWSJavaSdkSqs,
+                buildSparkLibPath(),
                 "--master",
                 "local",
                 script}, args);

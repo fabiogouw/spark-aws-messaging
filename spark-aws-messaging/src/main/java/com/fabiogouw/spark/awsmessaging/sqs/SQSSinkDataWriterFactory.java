@@ -1,6 +1,7 @@
 package com.fabiogouw.spark.awsmessaging.sqs;
 
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
@@ -49,7 +50,8 @@ public class SQSSinkDataWriterFactory implements DataWriterFactory {
     private SqsClient getAmazonSQS() {
         SqsClientBuilder clientBuilder = injectedBuilder != null
                 ? injectedBuilder
-                : SqsClient.builder().credentialsProvider(DefaultCredentialsProvider.create());
+                : SqsClient.builder().httpClientBuilder(UrlConnectionHttpClient.builder())
+                    .credentialsProvider(DefaultCredentialsProvider.create());
         if(!options.getEndpoint().isEmpty()) {
             clientBuilder.endpointOverride(java.net.URI.create(options.getEndpoint()));
         }
