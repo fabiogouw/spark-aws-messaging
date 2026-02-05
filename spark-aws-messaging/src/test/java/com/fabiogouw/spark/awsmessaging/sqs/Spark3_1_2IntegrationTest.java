@@ -8,6 +8,6 @@ import java.io.IOException;
 public class Spark3_1_2IntegrationTest extends SparkIntegrationTest {
 
     public Spark3_1_2IntegrationTest() throws IOException {
-        super("bitnami/spark:latest");
+        super("bitnamilegacy/spark:3.1.2");
     }
 }
