@@ -32,10 +32,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
 
 @Testcontainers
-public class SparkIntegrationTest {
+class SparkIntegrationTest {
 
     private static final Network network = Network.newNetwork();
-    private static final String libSparkAWSMessaging = "spark-aws-messaging-1.1.1.jar";
+    private static final String libSparkAWSMessaging = "spark-aws-messaging-1.2.0.jar";
 
     @Container
     private final GenericContainer spark;

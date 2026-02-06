@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 class SQSSinkDataWriterFactoryTest {
     @Test
-    void wifwhen_CustomEndpointIsNotProvided_should_CreateDataWriterWithOnlyRegionConfiguration() {
+    void when_CustomEndpointIsNotProvided_should_CreateDataWriterWithOnlyRegionConfiguration() {
         // Arrange
         SqsClient mockSqs = mock(SqsClient.class);
         when(mockSqs.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(GetQueueUrlResponse.builder().queueUrl("http://q").build());
