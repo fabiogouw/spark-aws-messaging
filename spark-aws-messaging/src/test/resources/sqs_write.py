@@ -1,4 +1,5 @@
 import sys
+import os
 from operator import add
 
 from pyspark.sql import SparkSession
@@ -8,6 +9,8 @@ if __name__ == "__main__":
         print("Missing parameters")
         sys.exit(-1)
     print("File: " + sys.argv[1])
+    size = os.path.getsize(sys.argv[1])
+    print("File size: {} bytes".format(size))
     print("Endpoint: " + sys.argv[2])
 
     spark = SparkSession\
