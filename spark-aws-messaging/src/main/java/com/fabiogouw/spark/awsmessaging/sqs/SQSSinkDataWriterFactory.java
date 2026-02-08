@@ -14,17 +14,10 @@ import org.apache.spark.sql.connector.write.DataWriterFactory;
 public class SQSSinkDataWriterFactory implements DataWriterFactory {
 
     private final SQSSinkOptions options;
-    // optional injected builder (used by tests)
-    private final software.amazon.awssdk.services.sqs.SqsClientBuilder injectedBuilder;
+    private SqsClientBuilder sqsClientBuilder;
 
     public SQSSinkDataWriterFactory(SQSSinkOptions options) {
-        this(options, null);
-    }
-
-    // test-friendly constructor that accepts a pre-configured SqsClientBuilder
-    public SQSSinkDataWriterFactory(SQSSinkOptions options, software.amazon.awssdk.services.sqs.SqsClientBuilder injectedBuilder) {
         this.options = options;
-        this.injectedBuilder = injectedBuilder;
     }
 
     @Override
@@ -48,17 +41,15 @@ public class SQSSinkDataWriterFactory implements DataWriterFactory {
     }
 
     private SqsClient getAmazonSQS() {
-        SqsClientBuilder clientBuilder = injectedBuilder != null
-                ? injectedBuilder
-                : SqsClient.builder().httpClientBuilder(UrlConnectionHttpClient.builder())
-                    .credentialsProvider(DefaultCredentialsProvider.create());
+        sqsClientBuilder = SqsClient.builder().httpClientBuilder(UrlConnectionHttpClient.builder())
+                .credentialsProvider(DefaultCredentialsProvider.builder().build());
         if(!options.getEndpoint().isEmpty()) {
-            clientBuilder.endpointOverride(java.net.URI.create(options.getEndpoint()));
+            sqsClientBuilder.endpointOverride(java.net.URI.create(options.getEndpoint()));
         }
         // map region string to Region enum if possible
         if(options.getRegion() != null && !options.getRegion().isEmpty()) {
-            clientBuilder.region(Region.of(options.getRegion()));
+            sqsClientBuilder.region(Region.of(options.getRegion()));
         }
-        return clientBuilder.build();
+        return sqsClientBuilder.build();
     }
 }

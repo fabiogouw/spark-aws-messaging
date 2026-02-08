@@ -27,8 +27,8 @@ sonar {
 }
 
 dependencies {
-    implementation group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.3.2'
-    compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.3.2'
+    implementation group: 'org.apache.spark', name: 'spark-core_2.12', version: '3.3.3'
+    compileOnly group: 'org.apache.spark', name: 'spark-sql_2.12', version: '3.3.3'
 
     // Use AWS SDK for Java v2 (BOM + SQS module)
     // NOTE: adjust the BOM version to the desired/latest 2.x release if needed
