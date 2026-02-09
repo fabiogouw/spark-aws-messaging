@@ -14,7 +14,6 @@ import org.apache.spark.sql.connector.write.DataWriterFactory;
 public class SQSSinkDataWriterFactory implements DataWriterFactory {
 
     private final SQSSinkOptions options;
-    private SqsClientBuilder sqsClientBuilder;
 
     public SQSSinkDataWriterFactory(SQSSinkOptions options) {
         this.options = options;
@@ -41,7 +40,7 @@ public class SQSSinkDataWriterFactory implements DataWriterFactory {
     }
 
     private SqsClient getAmazonSQS() {
-        sqsClientBuilder = SqsClient.builder().httpClientBuilder(UrlConnectionHttpClient.builder())
+        SqsClientBuilder sqsClientBuilder = SqsClient.builder().httpClientBuilder(UrlConnectionHttpClient.builder())
                 .credentialsProvider(DefaultCredentialsProvider.builder().build());
         if(!options.getEndpoint().isEmpty()) {
             sqsClientBuilder.endpointOverride(java.net.URI.create(options.getEndpoint()));

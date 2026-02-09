@@ -35,7 +35,7 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 class SparkIntegrationTest {
 
     private static final Network network = Network.newNetwork();
-    private static final String libSparkAWSMessaging = "spark-aws-messaging-1.2.0.jar";
+    private static final String LIB_JAR_NAME = "spark-aws-messaging-1.2.0.jar";
 
     @Container
     private final GenericContainer spark;
@@ -46,7 +46,7 @@ class SparkIntegrationTest {
     public SparkIntegrationTest() throws IOException {
         var sparkContainer = new GenericContainer(DockerImageName.parse("bitnamilegacy/spark:3.5.1"))
                 .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0777), "/home/")
-                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/" + libSparkAWSMessaging, 0445), "/home/")
+                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/" + LIB_JAR_NAME, 0445), "/home/")
                 .withNetwork(network)
                 .withEnv("AWS_ACCESS_KEY_ID", "test")
                 .withEnv("AWS_SECRET_ACCESS_KEY", "test")
@@ -102,7 +102,7 @@ class SparkIntegrationTest {
     }
 
     private static String buildSparkLibPath() throws IOException {
-        return "/home/" + libSparkAWSMessaging + ",/home/" + String.join(",/home/", listFileNames("build/libs/deps"));
+        return "/home/" + LIB_JAR_NAME + ",/home/" + String.join(",/home/", listFileNames("build/libs/deps"));
     }
 
     private ExecResult execSparkJob(String script, String... args) throws IOException, InterruptedException {
@@ -145,7 +145,6 @@ class SparkIntegrationTest {
     void when_DataframeContainsValueColumn_should_PutAnSQSMessageUsingSpark() throws IOException, InterruptedException {
         // arrange
         SqsClient sqs = configureQueue();
-        //Thread.sleep(30000);
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
                 "/home/sample.txt",
