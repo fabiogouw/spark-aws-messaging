@@ -1,9 +1,11 @@
 plugins {
     id 'java'
+    id 'java-library'
     id 'maven-publish'
     id 'signing'
     id 'jacoco'
     id "org.sonarqube" version "4.4.1.3373"
+    id 'org.jreleaser' version '1.22.0'
 }
 
 group = 'com.fabiogouw'
@@ -115,13 +117,33 @@ publishing {
                 password = "$ossrhPassword"
             }
 
-            url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+            url = 'https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/'
         }
     }
 }
 
 signing {
     sign publishing.publications.mavenJava
+}
+
+jreleaser {
+    signing {
+        pgp {
+            active = 'ALWAYS'
+            armored = true
+        }
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                sonatype {
+                    active = 'ALWAYS'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    stagingRepository('build/staging-deploy')
+                }
+            }
+        }
+    }
 }
 
 javadoc {
