@@ -28,13 +28,13 @@ The folder [/spark-aws-messaging/src/test/resources](/spark-aws-messaging/src/te
 Don't forget you'll need to configure the default credentials in your machine before running the example. See
 [Configuration and credential file settings](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) for more information.
 
-It also needs the *com.amazonaws:aws-java-sdk-sqs* package to run, so you can provide it through the *packages* parameter of spark-submit.
+This package already brings the AWS SDK v2 SQS dependencies transitively when you use `--packages`.
 
 The following command can be used to run the sample of how to use this library.
 
 ``` bash
 spark-submit \
---packages com.fabiogouw:spark-aws-messaging:1.1.0,com.amazonaws:aws-java-sdk-sqs:1.12.13 \
+--packages com.fabiogouw:spark-aws-messaging:1.2.0 \
 test.py sample.txt
 ```
 
@@ -72,7 +72,7 @@ This library is available at Maven Central repository, so you can reference it i
 <dependency>
     <groupId>com.fabiogouw</groupId>
     <artifactId>spark-aws-messaging</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
