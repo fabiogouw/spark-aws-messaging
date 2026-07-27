@@ -12,13 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Container.ExecResult;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.ministack.testcontainers.MiniStackContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,7 +32,6 @@ import java.util.stream.Stream;
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
 
 @Testcontainers
 class SparkIntegrationTest {
@@ -43,12 +43,14 @@ class SparkIntegrationTest {
     private final GenericContainer spark;
 
     @Container
-    private final LocalStackContainer localstack;
+    private final MiniStackContainer ministack;
 
     public SparkIntegrationTest() throws IOException {
+        Path resourcesDir = Paths.get("src/test/resources").toAbsolutePath();
+        Path mainJar = Paths.get("build/libs/" + LIB_JAR_NAME).toAbsolutePath();
         var sparkContainer = new GenericContainer(DockerImageName.parse("bitnamilegacy/spark:3.5.1"))
-                .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0777), "/home/")
-                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/" + LIB_JAR_NAME, 0445), "/home/")
+                .withCopyFileToContainer(MountableFile.forHostPath(resourcesDir.toString(), 0777), "/home")
+                .withCopyFileToContainer(MountableFile.forHostPath(mainJar.toString(), 0777), "/home/" + LIB_JAR_NAME)
                 .withNetwork(network)
                 .withEnv("AWS_ACCESS_KEY_ID", "test")
                 .withEnv("AWS_SECRET_ACCESS_KEY", "test")
@@ -56,19 +58,19 @@ class SparkIntegrationTest {
                 .waitingFor(Wait.forLogMessage(".*Starting Spark master.*\\n", 1)
                         .withStartupTimeout(Duration.ofMinutes(3)));
         spark = copyAllDependencyFilesToContainer(sparkContainer);
-        localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:4.14.0"))
+        ministack = new MiniStackContainer()
                 .withNetwork(network)
-                .withNetworkAliases("localstack")
-                .withEnv("SQS_ENDPOINT_STRATEGY", "off")
-                .withServices(SQS);
+                .withNetworkAliases("ministack");
     }
 
     private static GenericContainer<?> copyAllDependencyFilesToContainer(GenericContainer<?> container) throws IOException {
-        Path dir = Paths.get("build/libs/deps");
-        try (Stream<Path> stream = Files.list(dir)) {
-            stream.filter(Files::isRegularFile)
-                    .forEach(p -> container.withCopyFileToContainer(
-                            MountableFile.forHostPath(p.toString(), 0445),"/home/"));
+        Path dir = Paths.get("build/libs/deps").toAbsolutePath();
+        if (Files.exists(dir)) {
+            try (Stream<Path> stream = Files.list(dir)) {
+                stream.filter(Files::isRegularFile)
+                        .forEach(p -> container.withCopyFileToContainer(
+                                MountableFile.forHostPath(p.toAbsolutePath().toString(), 0777), "/home/" + p.getFileName().toString()));
+            }
         }
         return container;
     }
@@ -76,9 +78,9 @@ class SparkIntegrationTest {
     private SqsClient configureQueue(boolean isFIFO) {
         SqsClient sqs = SqsClient.builder()
                 .httpClientBuilder(UrlConnectionHttpClient.builder())
-                .endpointOverride(localstack.getEndpointOverride(SQS))
-                .region(Region.of(localstack.getRegion()))
-                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey())))
+                .endpointOverride(URI.create(ministack.getEndpoint()))
+                .region(Region.of(ministack.getRegion()))
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(ministack.getAccessKey(), ministack.getSecretKey())))
                 .build();
         String queueName = "my-test";
         Map<QueueAttributeName, String> queueAttributes = new HashMap<>();
@@ -124,8 +126,8 @@ class SparkIntegrationTest {
 
     private String getHostAccessibleQueueUrl(SqsClient sqs, String queueName) {
         String url = sqs.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build()).queueUrl();
-        return url.replace("localstack", localstack.getHost())
-                .replace("4566", localstack.getMappedPort(4566).toString());
+        return url.replace("ministack", ministack.getHost())
+                .replace("4566", ministack.getMappedPort(4566).toString());
     }
 
     private List<Message> getMessagesPut(SqsClient sqs, boolean isFIFO) {
@@ -152,7 +154,7 @@ class SparkIntegrationTest {
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
                 "/home/sample.txt",
-                "http://localstack:4566");
+                "http://ministack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isZero();
         Message message = getMessagesPut(sqs).get(0);
@@ -166,7 +168,7 @@ class SparkIntegrationTest {
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
                 "/home/multiline_sample.txt",
-                "http://localstack:4566");
+                "http://ministack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isZero();
         List<Message> messages = getMessagesPut(sqs);
@@ -181,7 +183,7 @@ class SparkIntegrationTest {
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
                 "/home/large_sample.txt",
-                "http://localstack:4566");
+                "http://ministack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
         assertThat(result.getStdout()).as("Spark job should fail due to exceeding size limit").contains("Batch requests cannot be longer than 262144 bytes");
@@ -199,7 +201,7 @@ class SparkIntegrationTest {
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
                 "/home/multiline_large_sample.txt",
-                "http://localstack:4566");
+                "http://ministack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
         assertThat(result.getStdout()).as("Spark job should fail due to exceeding size limit").contains("Some messages failed to be sent to the SQS queue");
@@ -213,7 +215,7 @@ class SparkIntegrationTest {
         SqsClient sqs = configureQueue(true);
         // act
         ExecResult result = execSparkJob("/home/sqs_write_with_groupid.py",
-                "http://localstack:4566");
+                "http://ministack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isZero();
         Message message = getMessagesPut(sqs, true).get(0);
@@ -226,7 +228,7 @@ class SparkIntegrationTest {
         SqsClient sqs = configureQueue();
         // act
         ExecResult result = execSparkJob("/home/sqs_write_with_msgattribs.py",
-                "http://localstack:4566");
+                "http://ministack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isZero();
         Message message = getMessagesPut(sqs).get(0);

@@ -38,12 +38,12 @@ dependencies {
     implementation 'software.amazon.awssdk:sqs'
     implementation "software.amazon.awssdk:url-connection-client"
 
-    testImplementation group: 'org.netbeans.external', name: 'org-apache-commons-lang3', version: 'RELEASE130'
+    testImplementation 'org.apache.commons:commons-lang3:3.17.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
     testImplementation 'org.testcontainers:testcontainers:1.21.4'
     testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
-    testImplementation 'org.testcontainers:localstack:1.21.4'
+    testImplementation 'org.ministack:testcontainers-ministack:0.1.5'
     testImplementation group: 'org.apache.spark', name: 'spark-catalyst_2.12', version: '3.5.9'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.27.7'
     testImplementation group: 'org.mockito', name: 'mockito-inline', version: '5.2.0'
