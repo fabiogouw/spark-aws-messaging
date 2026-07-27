@@ -13,6 +13,7 @@ import org.testcontainers.containers.Container.ExecResult;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,9 +52,11 @@ class SparkIntegrationTest {
                 .withNetwork(network)
                 .withEnv("AWS_ACCESS_KEY_ID", "test")
                 .withEnv("AWS_SECRET_ACCESS_KEY", "test")
-                .withEnv("SPARK_MODE", "master");
+                .withEnv("SPARK_MODE", "master")
+                .waitingFor(Wait.forLogMessage(".*Starting Spark master.*\\n", 1)
+                        .withStartupTimeout(Duration.ofMinutes(3)));
         spark = copyAllDependencyFilesToContainer(sparkContainer);
-        localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
+        localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:4.14.0"))
                 .withNetwork(network)
                 .withNetworkAliases("localstack")
                 .withEnv("SQS_ENDPOINT_STRATEGY", "off")
