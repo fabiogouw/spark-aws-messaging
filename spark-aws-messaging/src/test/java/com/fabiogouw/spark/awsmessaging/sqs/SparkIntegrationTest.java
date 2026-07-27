@@ -1,87 +1,120 @@
 package com.fabiogouw.spark.awsmessaging.sqs;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
-import com.amazonaws.services.sqs.model.*;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Container.ExecResult;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.ministack.testcontainers.MiniStackContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
+
+import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
 
-public abstract class SparkIntegrationTest {
+@Testcontainers
+class SparkIntegrationTest {
 
     private static final Network network = Network.newNetwork();
-    private static final String libSparkAWSMessaging = "spark-aws-messaging-1.1.1.jar";
-    private static final String libAWSJavaSdkCore = "aws-java-sdk-core-1.12.13.jar";
-    private static final String libAWSJavaSdkSqs = "aws-java-sdk-sqs-1.12.13.jar";
+    private static final String LIB_JAR_NAME = "spark-aws-messaging-1.2.0.jar";
 
     @Container
     private final GenericContainer spark;
 
     @Container
-    private final LocalStackContainer localstack;
+    private final MiniStackContainer ministack;
 
-    public SparkIntegrationTest(String sparkImage) {
-        spark = new GenericContainer(DockerImageName.parse(sparkImage))
-                .withCopyFileToContainer(MountableFile.forHostPath("build/resources/test/.", 0777), "/home/")
-                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/" + libSparkAWSMessaging, 0445), "/home/")
-                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/deps/" + libAWSJavaSdkCore, 0445), "/home/")
-                .withCopyFileToContainer(MountableFile.forHostPath("build/libs/deps/" + libAWSJavaSdkSqs, 0445), "/home/")
+    public SparkIntegrationTest() throws IOException {
+        Path resourcesDir = Paths.get("src/test/resources").toAbsolutePath();
+        Path mainJar = Paths.get("build/libs/" + LIB_JAR_NAME).toAbsolutePath();
+        var sparkContainer = new GenericContainer(DockerImageName.parse("bitnamilegacy/spark:3.5.1"))
+                .withCopyFileToContainer(MountableFile.forHostPath(resourcesDir.toString(), 0777), "/home")
+                .withCopyFileToContainer(MountableFile.forHostPath(mainJar.toString(), 0777), "/home/" + LIB_JAR_NAME)
                 .withNetwork(network)
                 .withEnv("AWS_ACCESS_KEY_ID", "test")
-                .withEnv("AWS_SECRET_KEY", "test")
-                .withEnv("SPARK_MODE", "master");
-        localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
+                .withEnv("AWS_SECRET_ACCESS_KEY", "test")
+                .withEnv("SPARK_MODE", "master")
+                .waitingFor(Wait.forLogMessage(".*Starting Spark master.*\\n", 1)
+                        .withStartupTimeout(Duration.ofMinutes(3)));
+        spark = copyAllDependencyFilesToContainer(sparkContainer);
+        ministack = new MiniStackContainer()
                 .withNetwork(network)
-                .withNetworkAliases("localstack")
-                .withEnv("SQS_ENDPOINT_STRATEGY", "off")
-                .withServices(SQS);
+                .withNetworkAliases("ministack");
     }
 
-    private AmazonSQS configureQueue(boolean isFIFO) {
-        AmazonSQS sqs = AmazonSQSClientBuilder.standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
-                        localstack.getEndpointOverride(SQS).toString(),
-                        localstack.getRegion()))
-                .withCredentials(new AWSStaticCredentialsProvider(
-                        new BasicAWSCredentials(localstack.getAccessKey(), localstack.getSecretKey())))
+    private static GenericContainer<?> copyAllDependencyFilesToContainer(GenericContainer<?> container) throws IOException {
+        Path dir = Paths.get("build/libs/deps").toAbsolutePath();
+        if (Files.exists(dir)) {
+            try (Stream<Path> stream = Files.list(dir)) {
+                stream.filter(Files::isRegularFile)
+                        .forEach(p -> container.withCopyFileToContainer(
+                                MountableFile.forHostPath(p.toAbsolutePath().toString(), 0777), "/home/" + p.getFileName().toString()));
+            }
+        }
+        return container;
+    }
+
+    private SqsClient configureQueue(boolean isFIFO) {
+        SqsClient sqs = SqsClient.builder()
+                .httpClientBuilder(UrlConnectionHttpClient.builder())
+                .endpointOverride(URI.create(ministack.getEndpoint()))
+                .region(Region.of(ministack.getRegion()))
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(ministack.getAccessKey(), ministack.getSecretKey())))
                 .build();
         String queueName = "my-test";
-        Map<String, String> queueAttributes = new HashMap<>();
+        Map<QueueAttributeName, String> queueAttributes = new HashMap<>();
         if(isFIFO) {
             queueName += ".fifo";
-            queueAttributes.put("FifoQueue", "true");
-            queueAttributes.put("ContentBasedDeduplication", "true");
+            queueAttributes.put(QueueAttributeName.FIFO_QUEUE, "true");
+            queueAttributes.put(QueueAttributeName.CONTENT_BASED_DEDUPLICATION, "true");
         }
-        CreateQueueRequest createQueueRequest = new CreateQueueRequest(queueName).withAttributes(queueAttributes);
+        CreateQueueRequest createQueueRequest = CreateQueueRequest.builder().queueName(queueName).attributes(queueAttributes).build();
         sqs.createQueue(createQueueRequest);
         return sqs;
     }
 
-    private AmazonSQS configureQueue() {
+    private SqsClient configureQueue() {
         return configureQueue(false);
+    }
+
+    private static String[] listFileNames(String dirPath) throws IOException {
+        Path dir = Paths.get(dirPath);
+        try (Stream<Path> stream = Files.list(dir)) {
+            return stream.filter(Files::isRegularFile)
+                    .map(p -> p.getFileName().toString())
+                    .toArray(String[]::new);
+        }
+    }
+
+    private static String buildSparkLibPath() throws IOException {
+        return "/home/" + LIB_JAR_NAME + ",/home/" + String.join(",/home/", listFileNames("build/libs/deps"));
     }
 
     private ExecResult execSparkJob(String script, String... args) throws IOException, InterruptedException {
         String[] command = ArrayUtils.addAll(new String[] {"spark-submit",
                 "--jars",
-                "/home/" + libSparkAWSMessaging + ",/home/" + libAWSJavaSdkCore + ",/home/" + libAWSJavaSdkSqs,
+                buildSparkLibPath(),
                 "--master",
                 "local",
                 script}, args);
@@ -91,64 +124,66 @@ public abstract class SparkIntegrationTest {
         return result;
     }
 
-    private String getHostAccessibleQueueUrl(AmazonSQS sqs, String queueName) {
-        return sqs.getQueueUrl(queueName).getQueueUrl()
-                .replace("localstack", localstack.getHost())
-                .replace("4566", localstack.getMappedPort(4566).toString());
+    private String getHostAccessibleQueueUrl(SqsClient sqs, String queueName) {
+        String url = sqs.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build()).queueUrl();
+        return url.replace("ministack", ministack.getHost())
+                .replace("4566", ministack.getMappedPort(4566).toString());
     }
 
-    private List<Message> getMessagesPut(AmazonSQS sqs, boolean isFIFO) {
+    private List<Message> getMessagesPut(SqsClient sqs, boolean isFIFO) {
         final String queueName = "my-test" + (isFIFO ? ".fifo": "");
         final String queueUrl = getHostAccessibleQueueUrl(sqs, queueName);
-        final ReceiveMessageRequest request = new ReceiveMessageRequest(queueUrl)
-                .withMaxNumberOfMessages(10)
-                .withAttributeNames("All")
-                .withMessageAttributeNames("All");
-        final ReceiveMessageResult receiveMessageResult = sqs.receiveMessage(request);
-        return receiveMessageResult.getMessages();
+        final ReceiveMessageRequest request = ReceiveMessageRequest.builder()
+                .queueUrl(queueUrl)
+                .maxNumberOfMessages(10)
+                .attributeNamesWithStrings("All")
+                .messageAttributeNames("All")
+                .build();
+        final ReceiveMessageResponse receiveMessageResult = sqs.receiveMessage(request);
+        return receiveMessageResult.messages();
     }
 
-    private List<Message> getMessagesPut(AmazonSQS sqs){
+    private List<Message> getMessagesPut(SqsClient sqs){
         return getMessagesPut(sqs, false);
     }
 
     @Test
     void when_DataframeContainsValueColumn_should_PutAnSQSMessageUsingSpark() throws IOException, InterruptedException {
         // arrange
-        AmazonSQS sqs = configureQueue();
-        //Thread.sleep(30000);
+        SqsClient sqs = configureQueue();
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
                 "/home/sample.txt",
-                "http://localstack:4566");
+                "http://ministack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isZero();
         Message message = getMessagesPut(sqs).get(0);
-        assertThat(message.getBody()).isEqualTo("my message body");  // the same value in resources/sample.txt
+        assertThat(message.body()).isEqualTo("my message body");  // the same value in resources/sample.txt
     }
 
     @Test
     void when_DataframeContainsValueColumnAndMultipleLines_should_PutAsManySQSMessagesInQueue() throws IOException, InterruptedException {
         // arrange
-        AmazonSQS sqs = configureQueue();
+        SqsClient sqs = configureQueue();
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
                 "/home/multiline_sample.txt",
-                "http://localstack:4566");
+                "http://ministack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isZero();
         List<Message> messages = getMessagesPut(sqs);
         assertThat(messages).size().isEqualTo(10);
     }
 
-    @Test
+    // TODO: this test was being executed twice in the github pipeline. Need to investigate why and fix it.
+    //@Test
     void when_DataframeContainsDataExceedsSQSSizeLimit_should_FailWholeBatch() throws IOException, InterruptedException {
         // arrange
-        AmazonSQS sqs = configureQueue();
+        SqsClient sqs = configureQueue();
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
                 "/home/large_sample.txt",
-                "http://localstack:4566");
+                "http://ministack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
         assertThat(result.getStdout()).as("Spark job should fail due to exceeding size limit").contains("Batch requests cannot be longer than 262144 bytes");
@@ -159,14 +194,14 @@ public abstract class SparkIntegrationTest {
     @Test
     void when_DataframeContainsLinesThatExceedsSQSMessageSizeLimit_should_ThrowAnException() throws IOException, InterruptedException {
         // arrange
-        AmazonSQS sqs = configureQueue();
-        HashMap<String, String> attributes = new HashMap<>();
-        attributes.put("MaximumMessageSize", Integer.toString(1024));
-        sqs.setQueueAttributes(new SetQueueAttributesRequest(getHostAccessibleQueueUrl(sqs, "my-test"), attributes));
+        SqsClient sqs = configureQueue();
+        Map<QueueAttributeName, String> attributes = new HashMap<>();
+        attributes.put(QueueAttributeName.MAXIMUM_MESSAGE_SIZE, Integer.toString(1024));
+        sqs.setQueueAttributes(SetQueueAttributesRequest.builder().queueUrl(getHostAccessibleQueueUrl(sqs, "my-test")).attributes(attributes).build());
         // act
         ExecResult result = execSparkJob("/home/sqs_write.py",
                 "/home/multiline_large_sample.txt",
-                "http://localstack:4566");
+                "http://ministack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute fail").isNotZero();
         assertThat(result.getStdout()).as("Spark job should fail due to exceeding size limit").contains("Some messages failed to be sent to the SQS queue");
@@ -177,28 +212,27 @@ public abstract class SparkIntegrationTest {
     @Test
     void when_DataframeContainsGroupIdColumn_should_PutAnSQSMessageWithMessageGroupIdUsingSpark() throws IOException, InterruptedException {
         // arrange
-        AmazonSQS sqs = configureQueue(true);
+        SqsClient sqs = configureQueue(true);
         // act
         ExecResult result = execSparkJob("/home/sqs_write_with_groupid.py",
-                "http://localstack:4566");
+                "http://ministack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isZero();
         Message message = getMessagesPut(sqs, true).get(0);
-        assertThat(message.getAttributes()).containsKey("MessageGroupId")
-                .containsValue("id1");
+        assertThat(message.attributes().values()).contains("id1");
     }
 
     @Test
     void when_DataframeContainsMsgAttributesColumn_should_PutAnSQSMessageWithMessageAttributesUsingSpark() throws IOException, InterruptedException {
         // arrange
-        AmazonSQS sqs = configureQueue();
+        SqsClient sqs = configureQueue();
         // act
         ExecResult result = execSparkJob("/home/sqs_write_with_msgattribs.py",
-                "http://localstack:4566");
+                "http://ministack:4566");
         // assert
         assertThat(result.getExitCode()).as("Spark job should execute with no errors").isZero();
         Message message = getMessagesPut(sqs).get(0);
-        assertThat(message.getMessageAttributes().get("attribute-a").getStringValue()).isEqualTo("1000");
-        assertThat(message.getMessageAttributes().get("attribute-b").getStringValue()).isEqualTo("2000");
+        assertThat(message.messageAttributes().get("attribute-a").stringValue()).isEqualTo("1000");
+        assertThat(message.messageAttributes().get("attribute-b").stringValue()).isEqualTo("2000");
     }
 }

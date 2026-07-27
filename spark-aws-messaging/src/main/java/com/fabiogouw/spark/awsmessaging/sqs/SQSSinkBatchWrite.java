@@ -1,10 +1,13 @@
 package com.fabiogouw.spark.awsmessaging.sqs;
 
 import org.apache.spark.sql.connector.write.*;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.services.sqs.SqsClient;
 
 public class SQSSinkBatchWrite implements BatchWrite {
 
-    private SQSSinkOptions options;
+    private final SQSSinkOptions options;
 
     public SQSSinkBatchWrite(SQSSinkOptions options) {
         this.options = options;

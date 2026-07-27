@@ -42,7 +42,7 @@ But before writing any job, we'll need to create a role for the job execution th
 ## Adding libraries
 
 When we create a Glue job, it creates for us an S3 bucket to store the script. We'll use the same S3 bucket to store the file which content we'll put in the SQS queue and also all libraries needed to run this code.
-These libraries can be obtained from maven repository using [https://mvnrepository.com/](https://mvnrepository.com/). Download the jars *aws-java-sdk-sqs-1.12.13.jar* and *spark-aws-messaging-0.4.0.jar*.
+These libraries can be obtained from maven repository using [https://mvnrepository.com/](https://mvnrepository.com/). Download `spark-aws-messaging-1.2.0.jar` and all its runtime dependencies (including AWS SDK v2 modules).
 
 ![We can use mvnrepository to download the jars needed](/doc/assets/glue-download-jar.png)
 
@@ -83,8 +83,8 @@ job.commit()
 ```
 
 There are some important configurations in the Advanced properties, in the Job details section.
-- *Dependent JARs path* must be provided with the path of the jars files we uploaded in the previous step, passing the with the fully path like this: *s3://aws-glue-assets-831962505547-us-east-1/jars/aws-java-sdk-sqs-1.12.13.jar,s3://aws-glue-assets-831962505547-us-east-1/jars/spark-aws-messaging-0.4.0.jar*
-- *Job parameters* must have the key *--user-jars-first* with the value *true* provided. This is because the Glue environment already have references to the AWS library in the classpath and sometimes this might conflict with the version the library uses. This parameter ensures that we are using the correct version of the AWS client jar.
+- *Dependent JARs path* must be provided with the full path of all jar files uploaded in the previous step (the connector jar plus its runtime dependencies), for example: *s3://aws-glue-assets-831962505547-us-east-1/jars/spark-aws-messaging-1.2.0.jar,s3://aws-glue-assets-831962505547-us-east-1/jars/sqs-2.49.2.jar,s3://aws-glue-assets-831962505547-us-east-1/jars/sdk-core-2.49.2.jar,...*
+- *Job parameters* must have the key *--user-jars-first* with the value *true* provided. This is because the Glue environment already has AWS libraries in the classpath and this avoids conflicts by giving priority to your uploaded SDK v2 jars.
 
 You can click on the Run button to start the execution of the job.
 
