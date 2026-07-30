@@ -93,12 +93,15 @@ The release flow expects these environment variables:
 - `GITHUB_TOKEN`
 - `MAVEN_CENTRAL_USERNAME`
 - `MAVEN_CENTRAL_PASSWORD`
+- `JRELEASER_GPG_PUBLIC_KEY`
 - `JRELEASER_GPG_SECRET_KEY`
 - `JRELEASER_GPG_PASSPHRASE`
 
 GitHub Actions mirrors the same flow in `.github/workflows/release.yml`.
 
-For GitHub Actions, the workflow uploads the deployment to Maven Central with `JRELEASER_MAVENCENTRAL_STAGE=UPLOAD` and leaves the final publication confirmation to be done manually in the Central Portal.
+For GitHub Actions, trigger the workflow manually with `workflow_dispatch` and provide the Git tag to upload. The workflow checks out that tag, uploads the deployment to Maven Central with `JRELEASER_MAVENCENTRAL_STAGE=UPLOAD`, and leaves the final publication confirmation to be done manually in the Central Portal.
+
+JReleaser PGP signing in memory also requires the ASCII-armored public key, so `JRELEASER_GPG_PUBLIC_KEY` must be configured together with the private key and passphrase.
 
 ## Messaging delivery semantics and error handling
 

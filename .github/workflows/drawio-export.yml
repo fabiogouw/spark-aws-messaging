@@ -1,6 +1,8 @@
 name: Keep draw.io export synchronized
 on:
   push:
+    branches:
+      - "**"
     paths:
       - "**.drawio"
       - .github/workflows/drawio-export.yml
