@@ -2,15 +2,17 @@ plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
-    id 'signing'
     id 'jacoco'
     id "org.sonarqube" version "4.4.1.3373"
     id 'org.jreleaser' version '1.22.0'
 }
 
 group = 'com.fabiogouw'
-archivesBaseName = 'spark-aws-messaging'
 version = '1.2.0'
+
+base {
+    archivesName = 'spark-aws-messaging'
+}
 
 repositories {
     mavenCentral()
@@ -55,7 +57,7 @@ java {
 }
 
 tasks.register('copyToLib', Copy) {
-    into "${buildDir}/libs/deps"
+    into layout.buildDirectory.dir('libs/deps')
     from configurations.runtimeClasspath
 }
 
@@ -75,7 +77,7 @@ test {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId = archivesBaseName
+            artifactId = base.archivesName.get()
             from components.java
             versionMapping {
                 usage('java-api') {
@@ -112,21 +114,30 @@ publishing {
 
     repositories {
         maven {
-            credentials {
-                username = "$ossrhUsername"
-                password = "$ossrhPassword"
-            }
-
-            url = 'https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/'
+            name = 'staging'
+            url = layout.buildDirectory.dir('staging-deploy')
         }
     }
 }
 
-signing {
-    sign publishing.publications.mavenJava
+tasks.register('publishToMavenCentral') {
+    group = 'publishing'
+    description = 'Stages the Maven publication and deploys it to Maven Central with JReleaser.'
+    dependsOn 'publishAllPublicationsToStagingRepository', 'jreleaserDeploy'
 }
 
 jreleaser {
+    gitRootSearch = true
+    release {
+        github {
+            enabled = true
+            repoOwner = 'fabiogouw'
+            name = 'spark-aws-messaging'
+            skipTag = true
+            skipRelease = true
+            token = System.getenv('GITHUB_TOKEN')
+        }
+    }
     signing {
         pgp {
             active = 'ALWAYS'
@@ -138,8 +149,11 @@ jreleaser {
             mavenCentral {
                 sonatype {
                     active = 'ALWAYS'
+                    namespace = 'com.fabiogouw'
                     url = 'https://central.sonatype.com/api/v1/publisher'
                     stagingRepository('build/staging-deploy')
+                    username = System.getenv('MAVEN_CENTRAL_USERNAME')
+                    password = System.getenv('MAVEN_CENTRAL_PASSWORD')
                 }
             }
         }
