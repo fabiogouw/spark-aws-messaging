@@ -5,6 +5,9 @@ name: Java CI with Gradle
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   build:
@@ -36,9 +39,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew build -PossrhUsername=null -PossrhPassword=null --exclude-task spark-aws-messaging:publish --info --rerun-tasks
+      run: ./gradlew build --info --rerun-tasks
     - name: Execute Sonar analysis
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew jacocoTestReport sonar -PossrhUsername=null -PossrhPassword=null --exclude-task spark-aws-messaging:build --info
+      run: ./gradlew jacocoTestReport sonar --exclude-task spark-aws-messaging:build --info

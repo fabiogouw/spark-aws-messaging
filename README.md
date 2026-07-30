@@ -78,6 +78,28 @@ This library is available at Maven Central repository, so you can reference it i
 
 The IAM permissions needed for this library to write on a SQS queue are *sqs:GetQueueUrl* and *sqs:SendMessage*.
 
+## Releasing to Maven Central
+
+The `spark-aws-messaging` module is configured to stage artifacts locally and deploy them to Maven Central with JReleaser.
+
+Create a release tag and run:
+
+```bash
+./gradlew :spark-aws-messaging:publishToMavenCentral
+```
+
+The release flow expects these environment variables:
+
+- `GITHUB_TOKEN`
+- `MAVEN_CENTRAL_USERNAME`
+- `MAVEN_CENTRAL_PASSWORD`
+- `JRELEASER_GPG_SECRET_KEY`
+- `JRELEASER_GPG_PASSPHRASE`
+
+GitHub Actions mirrors the same flow in `.github/workflows/release.yml`.
+
+For GitHub Actions, the workflow uploads the deployment to Maven Central with `JRELEASER_MAVENCENTRAL_STAGE=UPLOAD` and leaves the final publication confirmation to be done manually in the Central Portal.
+
 ## Messaging delivery semantics and error handling
 
 The sink is at least once  so some messages might be duplicated. If something wrong happens when the data is being written by a worker node, Spark will retry the task in another node. Messages that have already been sent could be sent again.

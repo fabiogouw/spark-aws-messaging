@@ -1,0 +1,49 @@
+name: Release to Maven Central
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: zulu
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build library
+        run: ./gradlew build --exclude-task spark-aws-messaging-example:test --info
+
+      - name: Upload deployment to Maven Central
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JRELEASER_MAVENCENTRAL_STAGE: UPLOAD
+          JRELEASER_GPG_SECRET_KEY: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
+          JRELEASER_GPG_PASSPHRASE: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+        run: ./gradlew :spark-aws-messaging:publishToMavenCentral --stacktrace
+
+      - name: Upload JReleaser metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-central-upload-metadata
+          path: |
+            spark-aws-messaging/build/jreleaser/output.properties
+            spark-aws-messaging/build/staging-deploy
+          if-no-files-found: error
