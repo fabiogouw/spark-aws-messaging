@@ -120,10 +120,14 @@ publishing {
     }
 }
 
+tasks.named('jreleaserDeploy') {
+    dependsOn 'publishAllPublicationsToStagingRepository'
+}
+
 tasks.register('publishToMavenCentral') {
     group = 'publishing'
     description = 'Stages the Maven publication and deploys it to Maven Central with JReleaser.'
-    dependsOn 'publishAllPublicationsToStagingRepository', 'jreleaserDeploy'
+    dependsOn 'jreleaserDeploy'
 }
 
 jreleaser {
